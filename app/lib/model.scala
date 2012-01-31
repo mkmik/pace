@@ -3,10 +3,10 @@ package afm
 import scala.collection._
 
 
-sealed abstract case class FieldDef (val name: String)
+sealed abstract case class FieldDef (val name: String, algo: DistanceAlgo)
 
-case class StringFieldDef(n: String) extends FieldDef(n)
-case class ListFieldDef(n: String) extends FieldDef(n)
+case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
+case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
 
 
 sealed abstract class Field
@@ -28,7 +28,7 @@ class Document (val fields: Map[String, Field]) {
 /////
 
 object Model {
-  val fields = List(StringFieldDef("dc_title"),
-                    ListFieldDef("dc_creator"))
+  val fields = List(StringFieldDef("dc_title", JaroWinkler(1.0)),
+                    ListFieldDef("dc_creator", JaroWinkler(1.0)))
 
 }

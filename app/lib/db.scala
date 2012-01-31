@@ -25,8 +25,8 @@ object DbUtils {
   def toDocument(rs: ResultSet) = new Document(Map(
     (for(field <- Model.fields)
      yield (field.name, field match {
-       case StringFieldDef(name) => StringField(rs.getString(name))
-       case ListFieldDef(name) => ListField(for(i <- getList(rs, name)) yield StringField(i))
+       case StringFieldDef(name, _) => StringField(rs.getString(name))
+       case ListFieldDef(name, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
      })
    ):_*
   ))
