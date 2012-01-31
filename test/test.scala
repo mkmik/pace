@@ -17,7 +17,8 @@ object DbSpec extends Specification {
 
       //println(rs(0))
       //println(rs(1))
-      println(DistanceAlgo.distance(rs(0), rs(1)))
+      //println(DistanceAlgo.distance(rs(0), rs(1)))
+      Duplicates.detect(rs)
 
       "test" must startWith("test")
     }

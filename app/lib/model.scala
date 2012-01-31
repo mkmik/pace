@@ -28,7 +28,10 @@ class Document (val fields: Map[String, Field]) {
 /////
 
 object Model {
-  val fields = List(StringFieldDef("dc_title", JaroWinkler(1.0)),
-                    ListFieldDef("dc_creator", JaroWinkler(1.0)))
+  val fields = List(
+    StringFieldDef("dri_objidentifier", NullDistanceAlgo()),
+    StringFieldDef("dc_title", JaroWinkler(1.0)),
+    StringFieldDef("dc_language", JaroWinkler(1.0)),
+    ListFieldDef("dc_creator", JaroWinkler(1.0)))
 
 }

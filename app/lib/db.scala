@@ -12,20 +12,24 @@ object DbUtils {
     for(i <- (array.getArray.asInstanceOf[Array[String]]).toList)
       yield (if (i != null)  {
         val components = i.split("§§§")
-        if (components.length > 1)
+        if(components.length > 1) {
           components(1)
-        else
+        } else {
           ""
-      } else { null
+        }
+      } else { ""
             })
 
   def getList(rs: ResultSet, column: String) = sqlArrayToList(rs.getArray(column))
-  def getString(rs: ResultSet, column: String) = rs.getString(column)
+  def getString(rs: ResultSet, column: String) = {
+    val v = rs.getString(column)
+    if (v == null) "" else v
+  }
 
   def toDocument(rs: ResultSet) = new Document(Map(
     (for(field <- Model.fields)
      yield (field.name, field match {
-       case StringFieldDef(name, _) => StringField(rs.getString(name))
+       case StringFieldDef(name, _) => StringField(getString(rs, name))
        case ListFieldDef(name, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
      })
    ):_*
