@@ -27,11 +27,19 @@ class Document (val fields: Map[String, Field]) {
 
 /////
 
+/*! Configuration
+ */
 object Model {
+  val windowSize = 10
+  val threshold = 0.9
+
   val fields = List(
     StringFieldDef("dri_objidentifier", NullDistanceAlgo()),
     StringFieldDef("dc_title", JaroWinkler(1.0)),
     StringFieldDef("dc_language", JaroWinkler(1.0)),
-    ListFieldDef("dc_creator", JaroWinkler(1.0)))
+    ListFieldDef("dc_creator", JaroWinkler(1.0)) ,
+    StringFieldDef("dc_description", JaroWinkler(0.1)),
+    StringFieldDef("oaf_affiliationname", JaroWinkler(0))
+  )
 
 }

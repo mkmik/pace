@@ -18,7 +18,9 @@ object DistanceAlgo {
   def distance(a: Document, b: Document) = {
     val w = Model.fields.map(_.algo.weight).reduceLeft(_ + _)
     (for(i <- Model.fields)
-      yield i.algo.distance(a.fields(i.name), b.fields(i.name))).reduceLeft(_ + _) / w
+     yield (if (i.algo.weight == 0) 0
+            else
+              i.algo.weight * i.algo.distance(a.fields(i.name), b.fields(i.name)))).reduceLeft(_ + _) / w
   }
 }
 
