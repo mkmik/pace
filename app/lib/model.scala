@@ -38,7 +38,7 @@ object Model {
     StringFieldDef("dc_title", JaroWinkler(1.0)),
     StringFieldDef("dc_language", JaroWinkler(1.0)),
     ListFieldDef("dc_creator", JaroWinkler(1.0)) ,
-    StringFieldDef("dc_description", JaroWinkler(0.1)),
+    StringFieldDef("dc_description", JaroWinkler(0.0)),
     StringFieldDef("oaf_affiliationname", JaroWinkler(0))
   )
 

@@ -18,7 +18,7 @@ object DbSpec extends Specification {
       //println(rs(0))
       //println(rs(1))
       //println(DistanceAlgo.distance(rs(0), rs(1)))
-      val subset = rs.take(500)
+      val subset = rs.take(200)
       Duplicates.windowedDetect(subset, subset.length)
       //Duplicates.detect(rs.take(1000))
 

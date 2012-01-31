@@ -1,7 +1,12 @@
 package afm
 
 import scala.collection.immutable.Queue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.Executors
 
+import scala.actors.scheduler.ExecutorScheduler
 
 object Duplicates {
   def detect(docs: Seq[Document]) = {
@@ -16,13 +21,30 @@ object Duplicates {
     }
   }
 
+  val cpus = Runtime.getRuntime.availableProcessors
+
+  def makePool = ExecutorScheduler(new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
+                                                        new LinkedBlockingQueue(20 + 2 * cpus),
+                                                        Executors.defaultThreadFactory,
+                                                        new ThreadPoolExecutor.CallerRunsPolicy()
+                                                      ))
+
   def windowedDetect(docs: Seq[Document], windowSize: Int = Model.windowSize) = {
     var q = Queue[Document]()
 
-    for(pivot <- docs)  {
-      duplicatesInWindow(pivot, q)
 
-      q = enqueue(q, pivot, windowSize)
+    val pool = makePool
+
+    try {
+      for(pivot <- docs)  {
+        pool execute duplicatesInWindow(pivot, q)
+
+        q = enqueue(q, pivot, windowSize)
+      }
+
+    } finally {
+      pool.shutdown()
+      pool.join()
     }
   }
 
