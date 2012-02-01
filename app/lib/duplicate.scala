@@ -28,6 +28,7 @@ class PrintingCollector extends Collector {
 class MongoDBCollector(val collectionName: String) extends Collector {
   val coll = MongoDBCollector.mongoConn("afm")(collectionName)
   coll.drop()
+  coll.ensureIndex(MongoDBObject("d" -> 1))
 
   def collect(dup: Duplicate) = coll += dup.toMongo
 }
