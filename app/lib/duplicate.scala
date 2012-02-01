@@ -49,11 +49,15 @@ object Duplicates {
   case class Stop
 
   def makeCollectorActor(collector: Collector): Actor = actor {
+    var n = 0
     loop {
       react {
-        case dup: Duplicate => collector.collect(dup)
+        case dup: Duplicate => {
+          n += 1
+          collector.collect(dup)
+        }
         case Stop => {
-          println("STOPPING ACTOR")
+          println("STOPPING ACTOR after adding %s dups".format(n))
           reply(true)
           exit('stop)
         }
