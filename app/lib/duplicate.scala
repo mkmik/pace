@@ -37,14 +37,15 @@ object MongoDBCollector {
 }
 
 
+
 object Duplicates {
   val cpus = Runtime.getRuntime.availableProcessors
 
-  def makePool = ExecutorScheduler(new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
-                                                        new LinkedBlockingQueue(20 + 2 * cpus),
+  def makeExecutor = new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
+                                                        new LinkedBlockingQueue(0 + 2 * cpus),
                                                         Executors.defaultThreadFactory,
                                                         new ThreadPoolExecutor.CallerRunsPolicy()
-                                                      ))
+                                                      )
 
   case class Stop
 
@@ -57,8 +58,8 @@ object Duplicates {
           collector.collect(dup)
         }
         case Stop => {
-          println("STOPPING ACTOR after adding %s dups".format(n))
-          reply(true)
+          //println("STOPPING ACTOR after adding %s dups".format(n))
+          reply(n)
           exit('stop)
         }
       }
@@ -69,7 +70,8 @@ object Duplicates {
     var n = 0
 
     var q = Queue[Document]()
-    val pool = makePool
+    val executor = makeExecutor
+    val pool = ExecutorScheduler(executor)
     //val collectorActor = makeCollectorActor(new PrintingCollector)
     val collectorActor = makeCollectorActor(new MongoDBCollector("candidates"))
 
@@ -85,14 +87,18 @@ object Duplicates {
       }
 
     } finally {
-      println("SENDING STOP")
-      println("SHUTTING DOWN POOL")
+      //println("SHUTTING DOWN POOL")
       pool.shutdown()
-      println("WAITING FOR JOBS")
-      pool.join()
+      //println("WAITING FOR JOBS")
+      executor.awaitTermination(10, TimeUnit.MINUTES)
+      //println("SENDING STOP")
       val res = collectorActor !? Stop
-      println("GOT RES %s".format(res))
-      println("DONE")
+      //println("GOT RES %s".format(res))
+      //println("DONE")
+
+      val coll = MongoDBCollector.mongoConn("afm")("candidates")
+      println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
+
     }
   }
 
