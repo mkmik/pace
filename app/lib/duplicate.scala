@@ -1,26 +1,25 @@
 package afm
 
 import scala.collection.immutable.Queue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.Executors
-
+import java.util.concurrent._
 import scala.actors.scheduler.ExecutorScheduler
 
+import scala.actors.Actor
+import scala.actors.Actor._
+
+
+case class Duplicate(val d: Double, val a: Document, val b: Document)
+
+trait Collector {
+  def collect(dup: Duplicate)
+}
+
+class PrintingCollector extends Collector {
+  def collect(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
+}
+
+
 object Duplicates {
-  def detect(docs: Seq[Document]) = {
-    var n = 0
-
-    for(pivot <- docs)  {
-      duplicatesInWindow(pivot, docs)
-
-      if (n % 100 == 0)
-        println("---------------------------------------- %s".format(n))
-      n = n + 1
-    }
-  }
-
   val cpus = Runtime.getRuntime.availableProcessors
 
   def makePool = ExecutorScheduler(new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
@@ -29,32 +28,56 @@ object Duplicates {
                                                         new ThreadPoolExecutor.CallerRunsPolicy()
                                                       ))
 
-  def windowedDetect(docs: Seq[Document], windowSize: Int = Model.windowSize) = {
-    var q = Queue[Document]()
+  case class Stop
 
-
-    val pool = makePool
-
-    try {
-      for(pivot <- docs)  {
-        pool execute duplicatesInWindow(pivot, q)
-
-        q = enqueue(q, pivot, windowSize)
+  def makeCollectorActor(collector: Collector): Actor = actor {
+    loop {
+      react {
+        case dup: Duplicate => collector.collect(dup)
+        case Stop => {
+          println("STOPPING ACTOR")
+          reply(true)
+          exit('stop)
+        }
       }
-
-    } finally {
-      pool.shutdown()
-      pool.join()
     }
   }
 
-  def duplicatesInWindow(pivot: Document, records: Seq[Document]) = {
+  def windowedDetect(docs: Seq[Document], windowSize: Int = Model.windowSize) = {
+    var n = 0
+
+    var q = Queue[Document]()
+    val pool = makePool
+    val collectorActor = makeCollectorActor(new PrintingCollector)
+
+    try {
+      for(pivot <- docs)  {
+        pool execute duplicatesInWindow(pivot, q, collectorActor)
+
+        q = enqueue(q, pivot, windowSize)
+        n += 1
+        if (n % 100 == 0)
+          println("---------------------------------------- %s".format(n))
+      }
+
+    } finally {
+      println("SENDING STOP")
+      val res = collectorActor !? Stop
+      println("GOT RES %s".format(res))
+      println("SHUTTING DOWN POOL")
+      pool.shutdown()
+      println("WAITING FOR JOBS")
+      pool.join()
+      println("DONE")
+    }
+  }
+
+  def duplicatesInWindow(pivot: Document, records: Seq[Document], collectorActor: Actor) = {
     for (r <- records) {
       if (pivot != r) {
         val d = DistanceAlgo.distance(pivot, r)
         if (d > Model.threshold)
-          //println("DISTANCE %s for:\n\t'%s'\n\t'%s'\n".format(d, pivot, r))
-          println("DISTANCE %s".format(d))
+          collectorActor ! Duplicate(d, pivot, r)
       }
     }
   }
