@@ -13,7 +13,7 @@ object DbSpec extends Specification {
 
   "the db" should {
     "handle arrays" in {
-      val rs = queryEvaluator.select("select * from results_view") { row => toDocument(row) }
+      val rs = queryEvaluator.select("select * from results_view order by dc_title") { row => toDocument(row) }
 
       //println(rs(0))
       //println(rs(1))
