@@ -1,5 +1,6 @@
 package afm
 
+import scala.collection.immutable.Map
 import scala.collection.immutable.Queue
 import java.util.concurrent._
 import scala.actors.scheduler.ExecutorScheduler
@@ -7,8 +8,14 @@ import scala.actors.scheduler.ExecutorScheduler
 import scala.actors.Actor
 import scala.actors.Actor._
 
+import com.mongodb.casbah.Imports._
 
-case class Duplicate(val d: Double, val a: Document, val b: Document)
+
+case class Duplicate(val d: Double, val a: Document, val b: Document) {
+  def toMongo = MongoDBObject("d" -> d,
+                              "left" -> a.toMongo,
+                              "right" -> b.toMongo)
+}
 
 trait Collector {
   def collect(dup: Duplicate)
@@ -16,6 +23,17 @@ trait Collector {
 
 class PrintingCollector extends Collector {
   def collect(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
+}
+
+class MongoDBCollector(val collectionName: String) extends Collector {
+  val coll = MongoDBCollector.mongoConn("afm")(collectionName)
+  coll.drop()
+
+  def collect(dup: Duplicate) = coll += dup.toMongo
+}
+
+object MongoDBCollector {
+  val mongoConn = MongoConnection()
 }
 
 
@@ -48,7 +66,8 @@ object Duplicates {
 
     var q = Queue[Document]()
     val pool = makePool
-    val collectorActor = makeCollectorActor(new PrintingCollector)
+    //val collectorActor = makeCollectorActor(new PrintingCollector)
+    val collectorActor = makeCollectorActor(new MongoDBCollector("candidates"))
 
     try {
       for(pivot <- docs)  {
@@ -62,12 +81,12 @@ object Duplicates {
 
     } finally {
       println("SENDING STOP")
-      val res = collectorActor !? Stop
-      println("GOT RES %s".format(res))
       println("SHUTTING DOWN POOL")
       pool.shutdown()
       println("WAITING FOR JOBS")
       pool.join()
+      val res = collectorActor !? Stop
+      println("GOT RES %s".format(res))
       println("DONE")
     }
   }
