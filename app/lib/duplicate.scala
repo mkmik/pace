@@ -71,7 +71,8 @@ object Duplicates {
 
     try {
       for(pivot <- docs)  {
-        pool execute duplicatesInWindow(pivot, q, collectorActor)
+        val records = q  // capture the reference to the current queue
+        pool execute duplicatesInWindow(pivot, records, collectorActor)
 
         q = enqueue(q, pivot, windowSize)
         n += 1
