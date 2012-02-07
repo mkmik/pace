@@ -48,10 +48,10 @@ class Document (val fields: Map[String, Field]) {
  */
 trait Config {
   val windowSize = 10
-  val threshold = 0.9
+  val threshold = 0.83
 
   val mongoDb = MongoConnection()("pace")
-  val sortOn = "lastName"
+  val sortOn = "n"
 }
 
 trait PaperModel {
@@ -60,6 +60,7 @@ trait PaperModel {
     StringFieldDef("firstName", JaroWinkler(1.0)),
     StringFieldDef("lastName", JaroWinkler(1.0)),
     StringFieldDef("country", JaroWinkler(1.0)),
+    StringFieldDef("birthDate", JaroWinkler(1.0)),
     ListFieldDef("context", JaroWinkler(0.0)),
     StringFieldDef("kind", NullDistanceAlgo()),
     IntFieldDef("relatedTo", NullDistanceAlgo())

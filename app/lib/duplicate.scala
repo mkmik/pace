@@ -23,6 +23,7 @@ trait Collector {
   def collect(dup: Duplicate)
 
   def truePositives(dups: Iterable[Duplicate]) = dups count { d => d.check }
+  def falsePositives(dups: Iterable[Duplicate]) = dups count { d => !d.check }
 
   def precision(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / dups.count { _ => true }
   def recall(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / realDups
@@ -112,6 +113,8 @@ object Duplicates {
 
       val coll = collector.coll
       println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
+      println("FALSE POSITIVES %s".format(collector.dups filter { d => !d.check } map { d => d.a.identifier}))
+      println("FALSE POSITIVES %s".format(collector.falsePositives(collector.dups)))
       println("PRECISION %s".format(collector.precision(collector.dups)))
       println("RECALL %s".format(collector.recall(collector.dups)))
     }

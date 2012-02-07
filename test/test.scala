@@ -24,7 +24,7 @@ object DbSpec extends Specification {
       for(i <- 0 to 0) {
         //val subset = rs.take(3000)
         //Duplicates.windowedDetect(subset, subset.toSeq.length)
-        Duplicates.windowedDetect(rs, 1000)
+        Duplicates.windowedDetect(rs, Model.windowSize)
       }
 
       "test" must startWith("test")
