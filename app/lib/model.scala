@@ -51,6 +51,7 @@ trait Config {
   val threshold = 0.9
 
   val mongoDb = MongoConnection()("pace")
+  val sortOn = "lastName"
 }
 
 trait PaperModel {

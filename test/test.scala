@@ -19,7 +19,7 @@ object DbSpec extends Specification {
   "the db" should {
     "handle arrays" in {
       //val rs = queryEvaluator.select("select * from results_view order by dc_title") { row => toDocument(row) }
-      val rs = source map MongoUtils.toDocument
+      val rs = (source.find().sort(Map(Model.sortOn -> 1)) map MongoUtils.toDocument).toSeq
 
       for(i <- 0 to 0) {
         //val subset = rs.take(3000)
