@@ -22,8 +22,9 @@ object DbSpec extends Specification {
       val rs = source map MongoUtils.toDocument
 
       for(i <- 0 to 0) {
-        val subset = rs.take(3000)
-        Duplicates.windowedDetect(subset, subset.toSeq.length)
+        //val subset = rs.take(3000)
+        //Duplicates.windowedDetect(subset, subset.toSeq.length)
+        Duplicates.windowedDetect(rs, 1000)
       }
 
       "test" must startWith("test")

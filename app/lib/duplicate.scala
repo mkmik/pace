@@ -15,14 +15,24 @@ case class Duplicate(val d: Double, val a: Document, val b: Document) {
   def toMongo = MongoDBObject("d" -> d,
                               "left" -> a.toMongo,
                               "right" -> b.toMongo)
+
+  def check = a.realIdentifier == b.realIdentifier
 }
 
 trait Collector {
   def collect(dup: Duplicate)
+
+  def truePositives(dups: Iterable[Duplicate]) = dups count { d => d.check }
+
+  def precision(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / dups.count { _ => true }
+  def recall(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / realDups
+
+  def realDups: Long
 }
 
 class PrintingCollector extends Collector {
   def collect(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
+  def realDups = 0
 }
 
 class MongoDBCollector(val collectionName: String) extends Collector {
@@ -30,7 +40,14 @@ class MongoDBCollector(val collectionName: String) extends Collector {
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
-  def collect(dup: Duplicate) = coll += dup.toMongo
+  var dups: List[Duplicate] = List()
+
+  def collect(dup: Duplicate) {
+    coll += dup.toMongo
+    dups = dups :+ dup
+  }
+
+  def realDups = Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate"))
 }
 
 
@@ -95,7 +112,8 @@ object Duplicates {
 
       val coll = collector.coll
       println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
-
+      println("PRECISION %s".format(collector.precision(collector.dups)))
+      println("RECALL %s".format(collector.recall(collector.dups)))
     }
   }
 

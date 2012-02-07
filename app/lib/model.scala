@@ -36,6 +36,9 @@ case class ListField (val values: Seq[Field]) extends Field {
 class Document (val fields: Map[String, Field]) {
   override def toString = "Document(%s)".format(fields)
 
+  def identifier = fields("n")
+  def realIdentifier = if (fields("kind").asInstanceOf[StringField].value == "unique") identifier else fields("relatedTo")
+
   def toMongo = MongoDBObject((for((k, v) <- fields.toIterable.toSeq) yield (k, v.toMongo)) :_*)
 }
 
