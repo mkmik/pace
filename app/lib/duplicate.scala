@@ -26,17 +26,12 @@ class PrintingCollector extends Collector {
 }
 
 class MongoDBCollector(val collectionName: String) extends Collector {
-  val coll = MongoDBCollector.mongoConn("afm")(collectionName)
+  val coll = Model.mongoDb(collectionName)
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
   def collect(dup: Duplicate) = coll += dup.toMongo
 }
-
-object MongoDBCollector {
-  val mongoConn = MongoConnection()
-}
-
 
 
 object Duplicates {
@@ -67,14 +62,15 @@ object Duplicates {
     }
   }
 
-  def windowedDetect(docs: Seq[Document], windowSize: Int = Model.windowSize) = {
+  def windowedDetect(docs: Iterable[Document], windowSize: Int = Model.windowSize) = {
     var n = 0
 
     var q = Queue[Document]()
     val executor = makeExecutor
     val pool = ExecutorScheduler(executor)
     //val collectorActor = makeCollectorActor(new PrintingCollector)
-    val collectorActor = makeCollectorActor(new MongoDBCollector("candidates"))
+    val collector = new MongoDBCollector("candidates")
+    val collectorActor = makeCollectorActor(collector)
 
     try {
       for(pivot <- docs)  {
@@ -97,13 +93,13 @@ object Duplicates {
       //println("GOT RES %s".format(res))
       //println("DONE")
 
-      val coll = MongoDBCollector.mongoConn("afm")("candidates")
+      val coll = collector.coll
       println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
 
     }
   }
 
-  def duplicatesInWindow(pivot: Document, records: Seq[Document], collectorActor: Actor) = {
+  def duplicatesInWindow(pivot: Document, records: Iterable[Document], collectorActor: Actor) = {
     for (r <- records) {
       if (pivot != r) {
         val d = DistanceAlgo.distance(pivot, r)

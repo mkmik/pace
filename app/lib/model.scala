@@ -7,6 +7,7 @@ import com.mongodb.casbah.Imports._
 
 sealed abstract case class FieldDef (val name: String, algo: DistanceAlgo)
 
+case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
 case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
 case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
 
@@ -15,12 +16,17 @@ sealed abstract class Field {
   def toMongo: Any
 }
 
+case class IntField (val value: Int) extends Field {
+  override def toString = "Field(%s)".format(value)
+  def toMongo = value
+}
+
 case class StringField (val value: String) extends Field {
   override def toString = "Field(%s)".format(value)
   def toMongo = value
 }
 
-case class ListField (val values: List[Field]) extends Field {
+case class ListField (val values: Seq[Field]) extends Field {
   override def toString = "ListField(%s)".format(values)
   def toMongo = values
 }
@@ -37,10 +43,25 @@ class Document (val fields: Map[String, Field]) {
 
 /*! Configuration
  */
-object Model {
+trait Config {
   val windowSize = 10
   val threshold = 0.9
 
+  val mongoDb = MongoConnection()("pace")
+}
+
+trait PaperModel {
+  val fields = List(
+    IntFieldDef("n", NullDistanceAlgo()),
+    StringFieldDef("firstName", JaroWinkler(1.0)),
+    StringFieldDef("lastName", JaroWinkler(1.0)),
+    StringFieldDef("country", JaroWinkler(1.0)) ,
+    ListFieldDef("context", JaroWinkler(0.0))
+  )
+}
+
+
+trait OpenAireModel {
   val fields = List(
     StringFieldDef("dri_objidentifier", NullDistanceAlgo()),
     StringFieldDef("dc_title", JaroWinkler(1.0)),
@@ -49,5 +70,7 @@ object Model {
     StringFieldDef("dc_description", JaroWinkler(0.0)),
     StringFieldDef("oaf_affiliationname", JaroWinkler(0))
   )
-
 }
+
+//object Model extends Config with OpenAireModel
+object Model extends Config with PaperModel
