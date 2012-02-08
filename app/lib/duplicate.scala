@@ -81,7 +81,6 @@ object Duplicates {
           collector.collect(dup)
         }
         case Stop => {
-          //println("STOPPING ACTOR after adding %s dups".format(n))
           reply(n)
           exit('stop)
         }
@@ -95,7 +94,6 @@ object Duplicates {
     var q = Queue[Document]()
     val executor = makeExecutor
     val pool = ExecutorScheduler(executor)
-    //val collectorActor = makeCollectorActor(new PrintingCollector)
     val collectorActor = makeCollectorActor(collector)
 
     try {
@@ -110,19 +108,13 @@ object Duplicates {
       }
 
     } finally {
-      //println("SHUTTING DOWN POOL")
       pool.shutdown()
-      //println("WAITING FOR JOBS")
       executor.awaitTermination(10, TimeUnit.MINUTES)
-      //println("SENDING STOP")
       val res = collectorActor !? Stop
-      //println("GOT RES %s".format(res))
-      //println("DONE")
 
       val coll = collector.coll
       println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
-//      println("FALSE POSITIVES %s".format(collector.dups filter { d => !d.check } map { d => d.a.identifier}))
-//      println("FALSE POSITIVES %s".format(collector.falsePositives(collector.dups)))
+      println("FALSE POSITIVES %s".format(collector.dups))
       println("PRECISION %s".format(collector.precision))
       println("RECALL %s".format(collector.recall))
     }
