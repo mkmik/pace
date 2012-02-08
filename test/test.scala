@@ -26,7 +26,8 @@ object DbSpec extends Specification {
 //        val key = "h%s".format(i)
       val key = "lastName"
 
-        val rs = (source.find().sort(Map(key -> 1)) map MongoUtils.toDocument).toSeq
+        //val rs = (source.find().sort(Map(key -> 1)) map MongoUtils.toDocument).toSeq
+	val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
 
         for(i <- 0 to 0) {
           //val subset = rs.take(3000)

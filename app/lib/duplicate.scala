@@ -51,7 +51,7 @@ class MongoDBCollector(val collectionName: String) extends Collector {
 
     if (!(seen contains seenKey)) {
       coll += dup.toMongo
-      dups = dups :+ dup
+//      dups = dups :+ dup
       seen = seen + seenKey
     }
   }
@@ -88,7 +88,7 @@ object Duplicates {
     }
   }
 
-  def windowedDetect(docs: Iterable[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize) = {
+  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize) = {
     var n = 0
 
     var q = Queue[Document]()
