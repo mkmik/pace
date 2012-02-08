@@ -42,10 +42,18 @@ class MongoDBCollector(val collectionName: String) extends Collector {
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
   var dups: List[Duplicate] = List()
+  var seen: Set[String] = Set()
 
   def collect(dup: Duplicate) {
-    coll += dup.toMongo
-    dups = dups :+ dup
+    val max = List(dup.a.identifier.toString, dup.b.identifier.toString).max
+    val min = List(dup.a.identifier.toString, dup.b.identifier.toString).min
+    val seenKey = "%s%s".format(max, min)
+
+    if (!(seen contains seenKey)) {
+      coll += dup.toMongo
+      dups = dups :+ dup
+      seen = seen + seenKey
+    }
   }
 
   def realDups = Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate"))
@@ -80,14 +88,13 @@ object Duplicates {
     }
   }
 
-  def windowedDetect(docs: Iterable[Document], windowSize: Int = Model.windowSize) = {
+  def windowedDetect(docs: Iterable[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize) = {
     var n = 0
 
     var q = Queue[Document]()
     val executor = makeExecutor
     val pool = ExecutorScheduler(executor)
     //val collectorActor = makeCollectorActor(new PrintingCollector)
-    val collector = new MongoDBCollector("candidates")
     val collectorActor = makeCollectorActor(collector)
 
     try {
@@ -97,7 +104,7 @@ object Duplicates {
 
         q = enqueue(q, pivot, windowSize)
         n += 1
-        if (n % 100 == 0)
+        if (n % 1000 == 0)
           println("---------------------------------------- %s".format(n))
       }
 
