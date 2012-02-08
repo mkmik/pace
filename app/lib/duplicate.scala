@@ -22,11 +22,11 @@ case class Duplicate(val d: Double, val a: Document, val b: Document) {
 trait Collector {
   def collect(dup: Duplicate)
 
-  def truePositives(dups: Iterable[Duplicate]) = dups count { d => d.check }
-  def falsePositives(dups: Iterable[Duplicate]) = dups count { d => !d.check }
+  var truePositives = 0
+  var dups = 0
 
-  def precision(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / dups.count { _ => true }
-  def recall(dups: Iterable[Duplicate]) = truePositives(dups).asInstanceOf[Double] / realDups
+  def precision = truePositives.asInstanceOf[Double] / dups
+  def recall = truePositives.asInstanceOf[Double] / realDups
 
   def realDups: Long
 }
@@ -41,7 +41,6 @@ class MongoDBCollector(val collectionName: String) extends Collector {
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
-  var dups: List[Duplicate] = List()
   var seen: Set[String] = Set()
 
   def collect(dup: Duplicate) {
@@ -51,7 +50,9 @@ class MongoDBCollector(val collectionName: String) extends Collector {
 
     if (!(seen contains seenKey)) {
       coll += dup.toMongo
-//      dups = dups :+ dup
+      dups += 1
+      if(dup.check)
+        truePositives += 1
       seen = seen + seenKey
     }
   }
@@ -120,10 +121,10 @@ object Duplicates {
 
       val coll = collector.coll
       println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
-      println("FALSE POSITIVES %s".format(collector.dups filter { d => !d.check } map { d => d.a.identifier}))
-      println("FALSE POSITIVES %s".format(collector.falsePositives(collector.dups)))
-      println("PRECISION %s".format(collector.precision(collector.dups)))
-      println("RECALL %s".format(collector.recall(collector.dups)))
+//      println("FALSE POSITIVES %s".format(collector.dups filter { d => !d.check } map { d => d.a.identifier}))
+//      println("FALSE POSITIVES %s".format(collector.falsePositives(collector.dups)))
+      println("PRECISION %s".format(collector.precision))
+      println("RECALL %s".format(collector.recall))
     }
   }
 

@@ -24,7 +24,7 @@ object DbSpec extends Specification {
 
 //      for(i <- 0 to 7)  {
 //        val key = "h%s".format(i)
-      val key = "lastName"
+      val key = "n"
 
         //val rs = (source.find().sort(Map(key -> 1)) map MongoUtils.toDocument).toSeq
 	val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
