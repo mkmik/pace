@@ -49,7 +49,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
 
         n += 1
         if (n % 1000 == 0)
-          println("---------------------------------------- %s".format(n))
+          println("f--------------------------------------- %s".format(n))
       }
     }
 
