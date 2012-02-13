@@ -47,7 +47,7 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
-  val windowSize = 10
+  val windowSize = 50
   val threshold = 0.90
 
   val mongoDb = MongoConnection()("pace")

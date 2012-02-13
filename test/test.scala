@@ -16,7 +16,8 @@ object DbSpec extends Specification {
   "the db" should {
     "handle arrays" in {
 
-      val detector = new MongoStreamDetector("n")
+      //val detector = new MongoStreamDetector("n")
+      val detector = new MongoExternallySorted("/tmp/hashes.sorted")
       detector.run
 
       "test" must startWith("test")
