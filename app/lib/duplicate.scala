@@ -88,7 +88,7 @@ object Duplicates {
     }
   }
 
-  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize) = {
+  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit) = {
     var n = 0
 
     var q = Queue[Document]()
@@ -96,17 +96,23 @@ object Duplicates {
     val pool = ExecutorScheduler(executor)
     val collectorActor = makeCollectorActor(collector)
 
+    def scan {
+        for(pivot <- docs)  {
+          if(limit match { case Some(x) => n > x; case None => false })
+            return
+
+          val records = q  // capture the reference to the current queue
+          pool execute duplicatesInWindow(pivot, records, collectorActor)
+
+          q = enqueue(q, pivot, windowSize)
+          n += 1
+          if (n % 1000 == 0)
+            println("---------------------------------------- %s".format(n))
+        }
+    }
+
     try {
-      for(pivot <- docs)  {
-        val records = q  // capture the reference to the current queue
-        pool execute duplicatesInWindow(pivot, records, collectorActor)
-
-        q = enqueue(q, pivot, windowSize)
-        n += 1
-        if (n % 1000 == 0)
-          println("---------------------------------------- %s".format(n))
-      }
-
+      scan
     } finally {
       pool.shutdown()
       executor.awaitTermination(10, TimeUnit.MINUTES)

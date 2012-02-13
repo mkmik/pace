@@ -47,6 +47,7 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
+  val limit = None
   val windowSize = 50
   val threshold = 0.90
 
