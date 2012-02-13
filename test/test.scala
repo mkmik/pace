@@ -16,9 +16,14 @@ object DbSpec extends Specification {
   "the db" should {
     "handle arrays" in {
 
-      //val detector = new MongoStreamDetector("n")
-      val detector = new MongoExternallySorted("/tmp/hashes.sorted")
-      detector.run
+      val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
+      val feature = new MongoFeatureExtractor(features, "/tmp/ngrams.txt")
+      feature.run
+
+      //val runner = new MongoStreamDetector("n")
+      //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
+      val runner = new MongoExternallySorted("/tmp/ngrams.sorted")
+      runner.run
 
       "test" must startWith("test")
     }

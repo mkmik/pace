@@ -5,11 +5,11 @@ import scala.collection.immutable.Map
 import com.mongodb.casbah.Imports._
 
 
-sealed abstract case class FieldDef (val name: String, algo: DistanceAlgo)
+sealed abstract case class FieldDef[A](val name: String, algo: DistanceAlgo)
 
-case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
-case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
-case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef(n, d)
+case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef[Int](n, d)
+case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n, d)
+case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d)
 
 
 sealed abstract class Field {
@@ -32,7 +32,6 @@ case class ListField (val values: Seq[Field]) extends Field {
 }
 
 
-
 class Document (val fields: Map[String, Field]) {
   override def toString = "Document(%s)".format(fields)
 
@@ -47,8 +46,9 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
+//  val limit = Some(100)
   val limit = None
-  val windowSize = 50
+  val windowSize = 10
   val threshold = 0.90
 
   val mongoDb = MongoConnection()("pace")

@@ -12,7 +12,7 @@ db = connection.pace
 coll = db.people
 
 bits = 64
-limit = None
+limit = 1000
 
 def doit():
     n = 0
