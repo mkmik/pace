@@ -62,7 +62,7 @@ class MongoDBCollector(val collectionName: String) extends Collector {
 
 
 object Duplicates {
-  val cpus = Runtime.getRuntime.availableProcessors
+  val cpus = Runtime.getRuntime.availableProcessors * 4
 
   def makeExecutor = new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
                                                         new LinkedBlockingQueue(0 + 2 * cpus),
