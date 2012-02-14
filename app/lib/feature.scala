@@ -20,7 +20,7 @@ class FieldFeatureExtractor[A](val field: FieldDef[A]) extends FeatureExtractor[
 trait NGramValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field): Seq[String] = {
     field match {
-      case StringField(value) => value.sliding(3).take(64).toSeq
+      case StringField(value) => value.sliding(Model.ngramSize).take(Model.maxNgrams).toSeq
       case _ => throw new Exception("unsupported field type")
     }
   }

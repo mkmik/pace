@@ -53,6 +53,9 @@ trait Config {
 
   val mongoDb = MongoConnection()("pace")
   val sortOn = "n"
+
+  val ngramSize = 3
+  val maxNgrams = 64
 }
 
 trait PaperModel {
