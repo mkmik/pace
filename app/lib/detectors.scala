@@ -69,7 +69,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
     class PrefetchingRandomAccessIterator extends Iterator[Document] {
       var page: List[Document] = List()
 
-      val pageSize = 6
+      val pageSize = 60
 
       def hasNext = page.nonEmpty || lines.hasNext
       def next = {
