@@ -24,7 +24,7 @@ object DbSpec extends Specification {
 
       //val runner = new MongoStreamDetector("n")
       //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
-      val runner = new MongoExternallySorted("/tmp/ngrams.sorted")
+      val runner = new PrefetchingMongoExternallySorted("/tmp/ngrams.sorted")
       runner.run
 
       "test" must startWith("test")
