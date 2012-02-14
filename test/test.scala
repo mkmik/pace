@@ -9,6 +9,8 @@ import afm.DbUtils._
 import com.mongodb.casbah.Imports._
 
 import scala.sys.process._
+import scala.io._
+import java.io._
 
 object DbSpec extends Specification {
 
@@ -20,7 +22,19 @@ object DbSpec extends Specification {
       val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
       val feature = new MongoFeatureExtractor(features, "/tmp/ngrams.txt")
       feature.run
-      ( "sort /tmp/ngrams.txt" ) #> new java.io.File("/tmp/ngrams.sorted") !!
+
+      println("sorting")
+
+      val lines = new BufferedSource(new FileInputStream("/tmp/ngrams.txt")).getLines.length
+      val cpus = Runtime.getRuntime.availableProcessors
+
+      val cmd = if (lines/cpus > 10000) "scripts/psort /tmp/ngrams.txt %s %s".format(lines/cpus, cpus)
+                else "sort /tmp/ngrams.txt"
+
+      println("sorting: %s".format(cmd))
+      cmd #> new java.io.File("/tmp/ngrams.sorted") !!
+
+      println("sorting done")
 
       //val runner = new MongoStreamDetector("n")
       //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
