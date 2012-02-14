@@ -61,7 +61,7 @@ class MongoExternallySorted(val file: String) extends Detector {
 }
 
 
-class PrefetchingMongoExternallySorted(val file: String) extends Detector {
+class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Int] = None) extends Detector {
   def run {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
@@ -88,6 +88,6 @@ class PrefetchingMongoExternallySorted(val file: String) extends Detector {
       def getId(line: String) = Integer.parseInt(line.split(":")(1))
     }
 
-    Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize)
+    Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize, totalRecords=totalRecords)
   }
 }

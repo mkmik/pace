@@ -8,6 +8,8 @@ import scala.actors.scheduler.ExecutorScheduler
 import scala.actors.Actor
 import scala.actors.Actor._
 
+import scala.math.round
+
 import com.mongodb.casbah.Imports._
 
 
@@ -112,7 +114,8 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 
 object Duplicates extends ParallelCollector[Duplicate] {
 
-  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit) = {
+  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector,
+                     windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Int] = None) = {
     var n = 0
 
     var q = Queue[Document]()
@@ -127,8 +130,13 @@ object Duplicates extends ParallelCollector[Duplicate] {
 
           q = enqueue(q, pivot, windowSize)
           n += 1
-          if (n % 1000 == 0)
-            println("---------------------------------------- %s".format(n))
+          if (n % 1000 == 0) {
+            val percent = totalRecords match {
+              case Some(t) => "(%s%%)".format(round(100.0 * n / t))
+              case None => ""
+            }
+            println("---------------------------------------- %s %s".format(n, percent))
+          }
         }
     }
 

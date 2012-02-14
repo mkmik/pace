@@ -2,6 +2,8 @@ package afm
 
 import com.mongodb.casbah.Imports._
 
+import scala.math.round
+
 
 trait FeatureExtractor[A] {
   def extract(doc: Document): Seq[A]
@@ -37,6 +39,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
   def run(limit: Option[Int]) {
     val sink = new java.io.PrintWriter(new java.io.File(fileName))
 
+    val totalRecords = source.count
 	  val rs = source.find() map MongoUtils.toDocument
     var n = 0
 
@@ -49,8 +52,10 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
           sink.println("%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value))
 
         n += 1
-        if (n % 1000 == 0)
-          println("f--------------------------------------- %s".format(n))
+        if (n % 1000 == 0) {
+          val percent = "(%s%%)".format(round(100.0 * n / totalRecords))
+          println("F--------------------------------------- %s %s".format(n, percent))
+        }
       }
     }
 
