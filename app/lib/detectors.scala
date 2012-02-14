@@ -59,3 +59,47 @@ class MongoExternallySorted(val file: String) extends Detector {
     Duplicates.windowedDetect(new RandomAccessIterator(), collector, Model.windowSize)
   }
 }
+
+
+class PrefetchingMongoExternallySorted(val file: String) extends Detector {
+  def run {
+    val sortedHashes = new BufferedSource(new FileInputStream(file))
+    val lines = sortedHashes.getLines
+
+    class PrefetchingRandomAccessIterator extends Iterator[Document] {
+      var page: List[Document] = List()
+
+      val pageSize = 6
+
+      def hasNext = page.nonEmpty || lines.hasNext
+      def next = {
+        if(page.isEmpty)
+          page = fetchPage
+
+        val res = page.head
+        page = page.tail
+        res
+      }
+
+      def fetchPage = (source.find("n" $in fetchIds) map MongoUtils.toDocument).toList
+
+      def fetchIds: List[Int] = {
+        var res: List[Int] = List()
+
+        for(i <- 0 to pageSize) {
+          if (! lines.hasNext)
+            return res
+
+          val line = lines.next
+          val hash_id = line.split(":")
+          val id = Integer.parseInt(hash_id(1))
+          res = id +: res
+        }
+
+        res
+      }
+    }
+
+    Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize)
+  }
+}
