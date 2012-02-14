@@ -3,9 +3,6 @@ package afm
 import com.mongodb.casbah.Imports._
 
 import scala.math.round
-import scala.actors.scheduler.ExecutorScheduler
-import scala.actors.Actor
-import scala.actors.Actor._
 
 
 trait FeatureExtractor[A] {
@@ -43,25 +40,12 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
     val sink = new java.io.PrintWriter(new java.io.File(fileName))
 
     val totalRecords = source.count
-    val rs = source.find() map MongoUtils.toDocument
+    val allDocs = source.find() map MongoUtils.toDocument
     var n = 0
 
-    def scan(pool: ExecutorScheduler, collectorActor: Actor) {
-      for(doc <- rs) {
-        if(limit match { case Some(x) => n > x; case None => false })
-          return
-
-        pool execute {
-          for(f <- extractor.extract(doc))
-            collectorActor ! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
-        }
-
-        n += 1
-        if (n % 1000 == 0) {
-          val percent = "(%s%%)".format(round(100.0 * n / totalRecords))
-          println("F--------------------------------------- %s %s".format(n, percent))
-        }
-      }
+    val docs = limit match {
+      case Some(x) => allDocs.take(x)
+      case None => allDocs
     }
 
     object FileCollector extends GenericCollector[String] {
@@ -69,7 +53,21 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
     }
 
     try {
-      runWithCollector(FileCollector)(scan)
+      runWithCollector(FileCollector) {
+        (pool, collectorActor) =>
+          for(doc <- docs) {
+            pool execute {
+              for(f <- extractor.extract(doc))
+                collectorActor ! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
+            }
+
+            n += 1
+            if (n % 1000 == 0) {
+              val percent = "(%s%%)".format(round(100.0 * n / totalRecords))
+              println("F--------------------------------------- %s %s".format(n, percent))
+            }
+          }
+      }
     } finally {
       sink.close()
     }

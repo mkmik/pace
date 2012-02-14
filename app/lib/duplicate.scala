@@ -114,17 +114,20 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 
 object Duplicates extends ParallelCollector[Duplicate] {
 
-  def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector,
+  def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
                      windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Int] = None) = {
     var n = 0
 
+    val docs = limit match {
+      case Some(x) => allDocs.take(x)
+      case None => allDocs
+    }
+
     var window = Queue[Document]()
 
-    def scan(pool: ExecutorScheduler, collectorActor: Actor) {
+    val res = runWithCollector(collector) {
+      (pool, collectorActor) =>
         for(pivot <- docs)  {
-          if(limit match { case Some(x) => n > x; case None => false })
-            return
-
           val w = window  // capture the reference to the current queue
           pool execute duplicatesInWindow(pivot, w, collectorActor)
 
@@ -140,14 +143,11 @@ object Duplicates extends ParallelCollector[Duplicate] {
         }
     }
 
-    try {
-      val res = runWithCollector(collector)(scan)
-    } finally {
-      println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
-      println("FALSE POSITIVES %s".format(collector.dups))
-      println("PRECISION %s".format(collector.precision))
-      println("RECALL %s".format(collector.recall))
-    }
+    println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
+    println("FALSE POSITIVES %s".format(collector.dups))
+    println("PRECISION %s".format(collector.precision))
+    println("RECALL %s".format(collector.recall))
+
   }
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
