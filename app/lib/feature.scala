@@ -1,7 +1,8 @@
 package afm
 
 import com.mongodb.casbah.Imports._
-
+import java.io._
+import resource._
 import scala.math.round
 
 
@@ -37,8 +38,6 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
   }
 
   def run(limit: Option[Int]) {
-    val sink = new java.io.PrintWriter(new java.io.File(fileName))
-
     val totalRecords = source.count
     val allDocs = source.find() map MongoUtils.toDocument
     var n = 0
@@ -48,12 +47,12 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
       case None => allDocs
     }
 
-    object FileCollector extends GenericCollector[String] {
-      def collect(line: String) = sink.println(line)
-    }
+    for(sink <- managed(new PrintWriter(new File(fileName)))) {
+      object fileCollector extends GenericCollector[String] {
+        def collect(line: String) = sink.println(line)
+      }
 
-    try {
-      runWithCollector(FileCollector) {
+      runWithCollector(fileCollector) {
         (pool, collectorActor) =>
           for(doc <- docs) {
             pool execute {
@@ -68,8 +67,6 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
             }
           }
       }
-    } finally {
-      sink.close()
     }
   }
 }
