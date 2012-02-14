@@ -29,13 +29,14 @@ trait NGramValueExtractor extends ValueExtractor[String] {
 
 class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) {
   val source = MongoConnection()("pace")("people")
-  val sink = new java.io.PrintWriter(new java.io.File(fileName))
 
   def run {
     run(Model.limit)
   }
 
   def run(limit: Option[Int]) {
+    val sink = new java.io.PrintWriter(new java.io.File(fileName))
+
 	  val rs = source.find() map MongoUtils.toDocument
     var n = 0
 
@@ -53,6 +54,10 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
       }
     }
 
-    scan
+    try {
+      scan
+    } finally {
+      sink.close()
+    }
   }
 }
