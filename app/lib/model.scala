@@ -55,7 +55,7 @@ trait Config {
   val sortOn = "n"
 
   val ngramSize = 3
-  val maxNgrams = 3
+  val maxNgrams = 4
 }
 
 trait PaperModel {
