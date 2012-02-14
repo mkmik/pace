@@ -40,12 +40,13 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
   def run(limit: Option[Int]) {
     val totalRecords = source.count
     val allDocs = source.find() map MongoUtils.toDocument
-    var n = 0
 
-    val docs = limit match {
+    val limitedDocs = limit match {
       case Some(x) => allDocs.take(x)
       case None => allDocs
     }
+
+    val docs = new ProgressReportingIterator(limitedDocs, "Features", Some(totalRecords))
 
     for(sink <- managed(new PrintWriter(new File(fileName)))) {
       object fileCollector extends GenericCollector[String] {
@@ -58,12 +59,6 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
             pool execute {
               for(f <- extractor.extract(doc))
                 collectorActor ! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
-            }
-
-            n += 1
-            if (n % 1000 == 0) {
-              val percent = "(%s%%)".format(round(100.0 * n / totalRecords))
-              println("F--------------------------------------- %s %s".format(n, percent))
             }
           }
       }

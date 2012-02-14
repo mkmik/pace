@@ -115,13 +115,14 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 object Duplicates extends ParallelCollector[Duplicate] {
 
   def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
-                     windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Int] = None) = {
-    var n = 0
+                     windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Long] = None) = {
 
-    val docs = limit match {
+    val limitedDocs = limit match {
       case Some(x) => allDocs.take(x)
       case None => allDocs
     }
+
+    val docs = new ProgressReportingIterator(limitedDocs, "Dups", totalRecords)
 
     var window = Queue[Document]()
 
@@ -132,22 +133,17 @@ object Duplicates extends ParallelCollector[Duplicate] {
           pool execute duplicatesInWindow(pivot, w, collectorActor)
 
           window = enqueue(window, pivot, windowSize)
-          n += 1
-          if (n % 1000 == 0) {
-            val percent = totalRecords match {
-              case Some(t) => "(%s%%)".format(round(100.0 * n / t))
-              case None => ""
-            }
-            println("---------------------------------------- %s %s".format(n, percent))
-          }
         }
     }
 
+    report(collector)
+  }
+
+  def report(collector: MongoDBCollector) {
     println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
     println("FALSE POSITIVES %s".format(collector.dups))
     println("PRECISION %s".format(collector.precision))
     println("RECALL %s".format(collector.recall))
-
   }
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
