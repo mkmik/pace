@@ -36,7 +36,7 @@ object DbSpec extends Specification {
 
       println("sorting done")
 
-      //val runner = new MongoStreamDetector("n")
+      //val runner = new MongoStreamDetector("n", Some(lines))
       //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
       val runner = new PrefetchingMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
       runner.run
