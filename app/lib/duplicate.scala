@@ -118,17 +118,17 @@ object Duplicates extends ParallelCollector[Duplicate] {
                      windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Int] = None) = {
     var n = 0
 
-    var q = Queue[Document]()
+    var window = Queue[Document]()
 
     def scan(pool: ExecutorScheduler, collectorActor: Actor) {
         for(pivot <- docs)  {
           if(limit match { case Some(x) => n > x; case None => false })
             return
 
-          val records = q  // capture the reference to the current queue
-          pool execute duplicatesInWindow(pivot, records, collectorActor)
+          val w = window  // capture the reference to the current queue
+          pool execute duplicatesInWindow(pivot, w, collectorActor)
 
-          q = enqueue(q, pivot, windowSize)
+          window = enqueue(window, pivot, windowSize)
           n += 1
           if (n % 1000 == 0) {
             val percent = totalRecords match {
@@ -150,8 +150,8 @@ object Duplicates extends ParallelCollector[Duplicate] {
     }
   }
 
-  def duplicatesInWindow(pivot: Document, records: Iterable[Document], collectorActor: Actor) = {
-    for (r <- records) {
+  def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
+    for (r <- window) {
       if (pivot != r) {
         val d = DistanceAlgo.distance(pivot, r)
         if (d > Model.threshold)
