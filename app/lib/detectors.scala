@@ -83,21 +83,9 @@ class PrefetchingMongoExternallySorted(val file: String) extends Detector {
 
       def fetchPage = (source.find("n" $in fetchIds) map MongoUtils.toDocument).toList
 
-      def fetchIds: List[Int] = {
-        var res: List[Int] = List()
+      def fetchIds = (lines.take(pageSize) map getId).toSeq
 
-        for(i <- 0 to pageSize) {
-          if (! lines.hasNext)
-            return res
-
-          val line = lines.next
-          val hash_id = line.split(":")
-          val id = Integer.parseInt(hash_id(1))
-          res = id +: res
-        }
-
-        res
-      }
+      def getId(line: String) = Integer.parseInt(line.split(":")(1))
     }
 
     Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize)
