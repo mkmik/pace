@@ -4,6 +4,7 @@ import afm._
 import afm.DbUtils._
 
 import com.mongodb.casbah.Imports._
+import java.util.concurrent.LinkedBlockingQueue
 
 import java.io._
 import scala.util.parsing.input.{StreamReader,Reader}
@@ -90,4 +91,41 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 
     Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize, totalRecords=totalRecords)
   }
+}
+
+
+class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
+  def run {
+    val sortedHashes = new BufferedSource(new FileInputStream(file))
+    val lines = sortedHashes.getLines
+
+    object fifoCollector extends GenericCollector[Document] {
+      val q = new FIFOStream[Document](new LinkedBlockingQueue(100))
+
+      def collect(doc: Document) = q.enqueue(doc)
+    }
+
+    import akka.dispatch.Future
+
+    val fifoWorker = Future {
+      runWithCollector(fifoCollector) {
+        def getId(line: String) = Integer.parseInt(line.split(":")(1))
+
+        (pool, collectorActor) =>
+          for(page <- lines.grouped(6)) {
+            val p = page
+            pool.execute {
+              for (doc <- (source.find("n" $in page.map(getId)) map MongoUtils.toDocument))
+                collectorActor ! doc
+            }
+          }
+      }
+
+      println("Closing queue")
+      fifoCollector.q.close
+    }
+
+    Duplicates.windowedDetect(fifoCollector.q.toStream.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
+  }
+
 }
