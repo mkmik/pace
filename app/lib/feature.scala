@@ -3,6 +3,9 @@ package afm
 import com.mongodb.casbah.Imports._
 
 import scala.math.round
+import scala.actors.scheduler.ExecutorScheduler
+import scala.actors.Actor
+import scala.actors.Actor._
 
 
 trait FeatureExtractor[A] {
@@ -29,7 +32,7 @@ trait NGramValueExtractor extends ValueExtractor[String] {
 }
 
 
-class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) {
+class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[String]{
   val source = MongoConnection()("pace")("people")
 
   def run {
@@ -40,16 +43,18 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
     val sink = new java.io.PrintWriter(new java.io.File(fileName))
 
     val totalRecords = source.count
-	  val rs = source.find() map MongoUtils.toDocument
+    val rs = source.find() map MongoUtils.toDocument
     var n = 0
 
-    def scan {
+    def scan(pool: ExecutorScheduler, collectorActor: Actor) {
       for(doc <- rs) {
         if(limit match { case Some(x) => n > x; case None => false })
           return
 
-        for(f <- extractor.extract(doc))
-          sink.println("%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value))
+        pool execute {
+          for(f <- extractor.extract(doc))
+            collectorActor ! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
+        }
 
         n += 1
         if (n % 1000 == 0) {
@@ -59,8 +64,12 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
       }
     }
 
+    object FileCollector extends GenericCollector[String] {
+      def collect(line: String) = sink.println(line)
+    }
+
     try {
-      scan
+      runWithCollector(FileCollector)(scan)
     } finally {
       sink.close()
     }
