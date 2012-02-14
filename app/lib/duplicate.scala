@@ -19,9 +19,11 @@ case class Duplicate(val d: Double, val a: Document, val b: Document) {
   def check = a.realIdentifier == b.realIdentifier
 }
 
-trait Collector {
-  def collect(dup: Duplicate)
+trait GenericCollector[A] {
+  def collect(dup: A)
+}
 
+trait Collector extends GenericCollector[Duplicate] {
   var truePositives = 0
   var dups = 0
 
@@ -60,8 +62,28 @@ class MongoDBCollector(val collectionName: String) extends Collector {
   def realDups = Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate"))
 }
 
+trait CollectingActor[A] {
+  case class Stop
 
-object Duplicates {
+  def makeCollectorActor(collector: GenericCollector[A]): Actor = actor {
+    var n = 0
+    loop {
+      react {
+        case Stop => {
+          reply(n)
+          exit('stop)
+        }
+        case dup: A => {
+          n += 1
+          collector.collect(dup)
+        }
+      }
+    }
+  }
+
+}
+
+trait ParallelCollector[A] extends CollectingActor[A] {
   val cpus = Runtime.getRuntime.availableProcessors * 4
 
   def makeExecutor = new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
@@ -70,33 +92,32 @@ object Duplicates {
                                                         new ThreadPoolExecutor.CallerRunsPolicy()
                                                       )
 
-  case class Stop
+  def runWithCollector[B](collector: GenericCollector[A])(body: (ExecutorScheduler, Actor) => B): B = {
+    val executor = makeExecutor
+    val pool = ExecutorScheduler(executor)
+    val collectorActor = makeCollectorActor(collector)
 
-  def makeCollectorActor(collector: Collector): Actor = actor {
-    var n = 0
-    loop {
-      react {
-        case dup: Duplicate => {
-          n += 1
-          collector.collect(dup)
-        }
-        case Stop => {
-          reply(n)
-          exit('stop)
-        }
-      }
+    try {
+      body(pool, collectorActor)
+    } finally {
+      println("Waiting for executor")
+      pool.shutdown()
+      executor.awaitTermination(10, TimeUnit.MINUTES)
+      val res = collectorActor !? Stop
+      println("Executor finished")
+      res
     }
   }
+}
+
+object Duplicates extends ParallelCollector[Duplicate] {
 
   def windowedDetect(docs: Iterator[Document], collector: MongoDBCollector, windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit) = {
     var n = 0
 
     var q = Queue[Document]()
-    val executor = makeExecutor
-    val pool = ExecutorScheduler(executor)
-    val collectorActor = makeCollectorActor(collector)
 
-    def scan {
+    def scan(pool: ExecutorScheduler, collectorActor: Actor) {
         for(pivot <- docs)  {
           if(limit match { case Some(x) => n > x; case None => false })
             return
@@ -112,14 +133,9 @@ object Duplicates {
     }
 
     try {
-      scan
+      val res = runWithCollector(collector)(scan)
     } finally {
-      pool.shutdown()
-      executor.awaitTermination(10, TimeUnit.MINUTES)
-      val res = collectorActor !? Stop
-
-      val coll = collector.coll
-      println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(res, coll.count(MongoDBObject())))
+      println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
       println("FALSE POSITIVES %s".format(collector.dups))
       println("PRECISION %s".format(collector.precision))
       println("RECALL %s".format(collector.recall))
