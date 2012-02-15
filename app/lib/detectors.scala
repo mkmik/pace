@@ -134,3 +134,64 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
   }
 
 }
+
+
+class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
+  override def threads = 20
+
+  def run {
+    val sortedHashes = new BufferedSource(new FileInputStream(file))
+    val lines = sortedHashes.getLines
+
+    object fifoCollector extends GenericCollector[Document] {
+      val q = new FIFO[Document](new LinkedBlockingQueue(10000))
+
+      def collect(doc: Document) = q.enqueue(doc)
+    }
+
+    import akka.dispatch.Future
+
+    val fifoWorker = Future {
+      runWithCollector(fifoCollector) {
+        def getId(line: String) = Integer.parseInt(line.split(":")(1))
+
+        (pool, collectorActor) =>
+          for(page <- lines.grouped(2000)) {
+            val p = page
+            pool.execute {
+
+              val q = "{n: {$in: [%s]}}".format((for(l <- page) yield getId(l).toString).reduceLeft(_ + "," + _))
+//              println("QUERY: %s".format(q))
+
+              import scala.sys.process._
+
+              val json:String = (List("mongoexport", "-d", "pace", "-c", "people", "--jsonArray", "-q", q) !!)
+
+//              println("JSON: %s...".format(json.take(40)))
+
+              import scala.util.parsing.json.JSON._
+              val jsonRecords = parseFull(json)
+              val docs = jsonRecords match {
+                case Some(a:List[Map[String, Any]]) => a.map(JsonUtils.toDocument)
+                case None => println("FAILED TO PARSE JSON"); List()
+              }
+              for(doc <- docs)
+                fifoCollector.collect(doc)
+
+//              for (doc <- (source.find("n" $in page.map(getId)) map MongoUtils.toDocument))
+//                fifoCollector.collect(doc)
+            }
+          }
+      }
+
+      println("Closing queue")
+      fifoCollector.q.close
+    }
+
+    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
+  }
+
+}
+
+
+// List("mongoexport", "-d", "pace", "-c", "people", "--jsonArray", "-q", "{n: {$in: [10, 100, 1000]}}") !!
