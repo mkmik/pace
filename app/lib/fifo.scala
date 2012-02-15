@@ -18,15 +18,17 @@ class FIFOStream[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueu
 class FIFO[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueue[Option[A]]()) {
 
   class BlockingIterator extends Iterator[A] {
-    def hasNext = queue take match {
-      case Some(_) => true
-      case None    => false
+    var nextVal: Option[A] = None;
+
+    def hasNext = {
+      nextVal = queue.take
+      nextVal match {
+        case Some(_) => true
+        case None    => false
+      }
     }
 
-    def next = queue take match {
-      case Some(a) => a
-      case None    => throw new Exception("iterator contract broken")
-    }
+    def next = nextVal.get
   }
 
   def toIterator = new BlockingIterator
