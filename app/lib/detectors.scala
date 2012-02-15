@@ -10,9 +10,12 @@ import java.io._
 import scala.util.parsing.input.{StreamReader,Reader}
 import scala.io._
 
+import com.mongodb.Mongo
 
 trait Detector {
-  val source = MongoConnection()("pace")("people")
+  val options = new MongoOptions()
+  options.connectionsPerHost = 40
+  val source = new MongoConnection(new Mongo("127.0.0.1", options))("pace")("people")
   val collector = new MongoDBCollector("candidates")
 
   def run
@@ -95,7 +98,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 
 
 class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
-  override def threads = 4
+  override def threads = 20
 
   def run {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
