@@ -88,8 +88,10 @@ trait CollectingActor[A] {
 trait ParallelCollector[A] extends CollectingActor[A] {
   val cpus = Runtime.getRuntime.availableProcessors * 4
 
-  def makeExecutor = new ThreadPoolExecutor(cpus, cpus, 4, TimeUnit.SECONDS,
-                                                        new LinkedBlockingQueue(0 + 2 * cpus),
+  def threads = cpus
+
+  def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
+                                                        new LinkedBlockingQueue(0 + 2 * threads),
                                                         Executors.defaultThreadFactory,
                                                         new ThreadPoolExecutor.CallerRunsPolicy()
                                                       )
