@@ -102,7 +102,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
     val lines = sortedHashes.getLines
 
     object fifoCollector extends GenericCollector[Document] {
-      val q = new FIFOStream[Document](new LinkedBlockingQueue(100))
+      val q = new FIFO[Document](new LinkedBlockingQueue(10000))
 
       def collect(doc: Document) = q.enqueue(doc)
     }
@@ -118,7 +118,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
             val p = page
             pool.execute {
               for (doc <- (source.find("n" $in page.map(getId)) map MongoUtils.toDocument))
-                collectorActor ! doc
+                fifoCollector.collect(doc)
             }
           }
       }
@@ -127,7 +127,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
       fifoCollector.q.close
     }
 
-    Duplicates.windowedDetect(fifoCollector.q.toStream.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
   }
 
 }
