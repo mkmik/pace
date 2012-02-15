@@ -65,7 +65,7 @@ trait PaperModel {
     StringFieldDef("lastName", JaroWinkler(1.0)),
     StringFieldDef("country", JaroWinkler(1.0)),
     StringFieldDef("birthDate", JaroWinkler(1.0)),
-    ListFieldDef("context", JaroWinkler(0.0)),
+//    ListFieldDef("context", JaroWinkler(0.0)),
     StringFieldDef("kind", NullDistanceAlgo()),
     IntFieldDef("relatedTo", NullDistanceAlgo())
   )

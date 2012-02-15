@@ -39,7 +39,8 @@ object DbSpec extends Specification {
       //val runner = new MongoStreamDetector("n", Some(lines))
       //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
       //val runner = new PrefetchingMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
-      val runner = new ParalellFetchMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
+      //val runner = new ParalellFetchMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
+      val runner = new CmdlineMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
       runner.run
 
       "test" must startWith("test")

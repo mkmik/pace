@@ -29,3 +29,20 @@ object JsonUtils {
    ):_*
   ))
 }
+
+
+object CSVUtils {
+  def toDocument(line: Array[String]) = {
+    val rs = line.iterator
+
+    new Document(Map(
+      (for(field <- Model.fields)
+       yield (field.name, field match {
+         case IntFieldDef(name, _) => val n = rs.next; IntField(Integer.parseInt(if(n=="") "0" else n))
+         case StringFieldDef(name, _) => StringField(rs.next)
+         case ListFieldDef(name, _) => throw new Exception("not implemented yet")
+       })
+     ):_*
+    ))
+  }
+}

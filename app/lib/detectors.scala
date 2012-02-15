@@ -12,6 +12,11 @@ import scala.io._
 
 import com.mongodb.Mongo
 
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import au.com.bytecode.opencsv.CSVReader
+
+
 trait Detector {
   val options = new MongoOptions()
   options.connectionsPerHost = 40
@@ -137,7 +142,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
 
 
 class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
-  override def threads = 20
+  override def threads = 16
 
   def run {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
@@ -161,25 +166,20 @@ class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Lo
             pool.execute {
 
               val q = "{n: {$in: [%s]}}".format((for(l <- page) yield getId(l).toString).reduceLeft(_ + "," + _))
-//              println("QUERY: %s".format(q))
 
               import scala.sys.process._
 
-              val json:String = (List("mongoexport", "-d", "pace", "-c", "people", "--jsonArray", "-q", q) !!)
+              val csv: String = (List("mongoexport", "-d", "pace", "-c", "people", "-f", "n,firstName,lastName,country,birthDate,kind,relatedTo", "--csv", "-q", q) !!)
 
-//              println("JSON: %s...".format(json.take(40)))
+                try {
+                  val values:Seq[Array[String]] = new CSVReader(new java.io.StringReader(csv)).readAll.toSeq.drop(1)
+                  val docs = values map CSVUtils.toDocument
 
-              import scala.util.parsing.json.JSON._
-              val jsonRecords = parseFull(json)
-              val docs = jsonRecords match {
-                case Some(a:List[Map[String, Any]]) => a.map(JsonUtils.toDocument)
-                case None => println("FAILED TO PARSE JSON"); List()
-              }
-              for(doc <- docs)
-                fifoCollector.collect(doc)
-
-//              for (doc <- (source.find("n" $in page.map(getId)) map MongoUtils.toDocument))
-//                fifoCollector.collect(doc)
+                  for(doc <- docs)
+                    fifoCollector.collect(doc)
+                } catch {
+                  case e => println("GOT exception %s: %s".format(e, csv))
+                }
             }
           }
       }

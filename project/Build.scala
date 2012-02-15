@@ -19,7 +19,9 @@ object ApplicationBuild extends Build {
       "postgresql" % "postgresql" % "8.4-701.jdbc4",
       "com.traveas" % "querulous-light_2.9.0" % "0.0.6",
 
-      "com.jsuereth" %% "scala-arm" % "1.2"
+      "com.jsuereth" %% "scala-arm" % "1.2",
+
+      "net.sf.opencsv" % "opencsv" % "2.1"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
