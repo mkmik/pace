@@ -143,14 +143,20 @@ object Duplicates extends ParallelCollector[Duplicate] {
     report(collector)
   }
 
-  def report(collector: MongoDBCollector) {
+  def report(collector: MongoDBCollector) = {
+    val precision = collector.precision
+    val recall = collector.recall
+    val dups = collector.dups
+
     println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(Model.windowSize, Model.limit))
-    println("FOUND DUPS %s".format(collector.dups))
+    println("FOUND DUPS %s".format(dups))
     println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
     println("TRUE POSITIVES %s".format(collector.truePositives))
-    println("PRECISION %s".format(collector.precision))
-    println("RECALL %s".format(collector.recall))
+    println("PRECISION %s".format(precision))
+    println("RECALL %s".format(recall))
+
+    (precision, recall, dups)
   }
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {

@@ -23,11 +23,11 @@ trait Detector {
   val source = new MongoConnection(new Mongo("127.0.0.1", options))("pace")("people")
   val collector = new MongoDBCollector("candidates")
 
-  def run
+  def run: (Double, Double, Int)
 }
 
 class MongoStreamDetector(val key: String) extends Detector {
-  def run {
+  def run = {
     val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
 
     val (docs, totalRecords) = Model.limit match {
@@ -40,7 +40,7 @@ class MongoStreamDetector(val key: String) extends Detector {
 }
 
 class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None) extends Detector {
-  def run {
+  def run = {
     val collector = new MongoDBCollector("candidates")
 
     for(i <- 0 to hashes)  {
@@ -49,11 +49,13 @@ class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = 
       val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
       Duplicates.windowedDetect(rs, collector, Model.windowSize, totalRecords=totalRecords)
     }
+
+    (0.0, 0.0, 0)
   }
 }
 
 class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector {
-  def run {
+  def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
 
@@ -77,7 +79,7 @@ class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = N
 
 
 class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector {
-  def run {
+  def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
 
@@ -111,7 +113,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
   override def threads = 20
 
-  def run {
+  def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
 
@@ -150,7 +152,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
 class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None) extends Detector with ParallelCollector[Document] {
   override def threads = 16
 
-  def run {
+  def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
 
