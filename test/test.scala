@@ -10,7 +10,7 @@ object DbSpec extends Specification {
     "rule" in {
       Model.algo match {
         case "singleField" => {
-          val runner = new MongoStreamDetector("n")
+          val runner = new MongoStreamDetector(Model.sortOn)
           runner.run
         }
         case "ngram" => {
