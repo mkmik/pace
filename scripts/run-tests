@@ -19,8 +19,23 @@ CORES=24
 
 REPORT=pace-stats/cores.csv
 
-rm $REPORT
-for c in 4 6 8 10 14 18 24; do
-#for c in 1 2 4 8; do
-    run -Dpace.cores=$c -Dpace.windowSize=100
+#rm $REPORT
+#for c in 4 6 8 10 14 18 24; do
+#    run -Dpace.cores=$c -Dpace.windowSize=100
+#done
+
+
+REPORT=pace-stats/simhash.csv
+
+rm -f $REPORT
+for s in 1 2 4 8; do
+    run -Dpace.algo=simhash -Dpace.simhashRotationStep=$s -Dpace.windowSize=100
+done
+
+
+REPORT=pace-stats/ngram.csv
+
+rm -f $REPORT
+for s in 2 3 4 5; do
+    run -Dpace.algo=ngram -Dpace.ngramSize=$s -Dpace.windowSize=10
 done
