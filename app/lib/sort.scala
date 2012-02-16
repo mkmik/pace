@@ -12,8 +12,9 @@ class  Sorter(val inputFile: String, val outputFile: String) {
 
   def run {
     val cpus = runtime.availableProcessors
+    val threads = Model.cores.getOrElse(cpus)
 
-    val cmd = if (lines/cpus > 10000) "scripts/psort %s %s %s".format(inputFile, lines/cpus, cpus)
+    val cmd = if (lines/cpus > 10000) "scripts/psort %s %s %s".format(inputFile, lines/threads, threads)
               else "sort %s".format(inputFile)
     
     println("sorting: %s".format(cmd))
