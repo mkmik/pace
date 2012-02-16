@@ -92,12 +92,13 @@ trait CollectingActor[A] {
 }
 
 trait ParallelCollector[A] extends CollectingActor[A] {
-  val cpus = runtime.availableProcessors * 4
+  val cpus = runtime.availableProcessors
 
-  def threads = cpus
+  def threads = Model.cores.getOrElse(cpus) * boost
+  def boost = Model.conf.getInt("threadPoolBoost").getOrElse(4)
 
   def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
-                                                        new LinkedBlockingQueue(0 + 2 * threads),
+                                                        new LinkedBlockingQueue(0 + 8 * threads),
                                                         Executors.defaultThreadFactory,
                                                         new ThreadPoolExecutor.CallerRunsPolicy()
                                                       )

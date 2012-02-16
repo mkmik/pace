@@ -46,6 +46,7 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
+  def cores: Option[Int] = None
   def limit: Option[Int] = None
   def windowSize = 10
   def threshold = 0.90
@@ -62,6 +63,7 @@ trait Config {
 trait OverrideConfig extends Config {
   val conf = OptionalConfigFactory.load("conf/pace.conf")
 
+  override def cores = conf.getInt("pace.cores")
   override def limit = conf.getInt("pace.limit")
   override def windowSize = conf.getInt("pace.windowSize").getOrElse(super.windowSize)
   override def threshold = conf.getDouble("pace.threshold").getOrElse(super.threshold)
