@@ -8,9 +8,11 @@ import afm.DbUtils._
 
 import com.mongodb.casbah.Imports._
 
+import scala.sys.runtime
 import scala.sys.process._
 import scala.io._
 import java.io._
+
 
 object DbSpec extends Specification {
 
@@ -26,7 +28,7 @@ object DbSpec extends Specification {
       println("sorting")
 
       val lines = new BufferedSource(new FileInputStream("/tmp/ngrams.txt")).getLines.length
-      val cpus = Runtime.getRuntime.availableProcessors
+      val cpus = runtime.availableProcessors
 
       val cmd = if (lines/cpus > 10000) "scripts/psort /tmp/ngrams.txt %s %s".format(lines/cpus, cpus)
                 else "sort /tmp/ngrams.txt"

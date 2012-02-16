@@ -9,6 +9,7 @@ import scala.actors.Actor
 import scala.actors.Actor._
 
 import scala.math.round
+import scala.sys.runtime
 
 import com.mongodb.casbah.Imports._
 
@@ -86,7 +87,7 @@ trait CollectingActor[A] {
 }
 
 trait ParallelCollector[A] extends CollectingActor[A] {
-  val cpus = Runtime.getRuntime.availableProcessors * 4
+  val cpus = runtime.availableProcessors * 4
 
   def threads = cpus
 
