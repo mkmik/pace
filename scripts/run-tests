@@ -8,11 +8,19 @@ run() {
 
 CORES=24
 
+# rm $REPORT
+# for s in 100000 1000000 4000000 10000000; do
+
+#     for w in 10 100 200 400 1000; do
+#         run -Dpace.cores=$CORES -Dpace.windowSize=$w -Dpace.limit=$s 
+#     done
+
+# done
+
+REPORT=pace-stats/cores.csv
+
 rm $REPORT
-for s in 100000 1000000 4000000 10000000; do
-
-    for w in 10 100 200 400 1000; do
-        run -Dpace.cores=$CORES -Dpace.windowSize=$w -Dpace.limit=$s 
-    done
-
+for c in 4 6 8 10 14 18 24; do
+#for c in 1 2 4 8; do
+    run -Dpace.cores=$c -Dpace.windowSize=100
 done
