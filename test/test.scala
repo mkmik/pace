@@ -57,7 +57,7 @@ object DbSpec extends Specification {
       for(report <- managed(new PrintWriter(new FileWriter(reportFileName , true)))) {
         if(!exists)
           report.println("size,window, cores, threshold,time,precision,recall,candidates")
-        report.println((size, Model.windowSize, cores, Model.threshold, time, precision, recall, candidates).productIterator.map(_.toString).mkString(","))
+        report.println((size, Model.windowSize, cores, Model.threshold, time/1000, precision, recall, candidates).productIterator.map(_.toString).mkString(","))
       }
 
       "test" must startWith("test")
