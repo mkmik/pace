@@ -11,8 +11,27 @@ import scala.sys.runtime
 
 object DbSpec extends Specification {
 
+  def multiPass[A](featuresFile: String, sortedFeaturesFile: String, extractor: FeatureExtractor[A]) = {
+    val feature = new MongoFeatureExtractor(extractor, featuresFile)
+    feature.run
+
+    val sorter = new Sorter(featuresFile, sortedFeaturesFile)
+    sorter.run
+
+    val lines = sorter.lines
+
+    //val runner = new MongoStreamDetector("n", Some(lines))
+    //val runner = new MongoExternallySorted(sortedFeaturesFile)
+    val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile, Some(lines))
+    //val runner = new ParalellFetchMongoExternallySorted(sortedFeaturesFile, Some(lines))
+    //val runner = new CmdlineMongoExternallySorted(sortedFeaturesFile, Some(lines))
+    runner.run
+  }
+
+
   "pace" should {
     "rule" in {
+
       val ((precision, recall, candidates), time) = timeTook {
         println("running")
         Model.algo match {
@@ -21,26 +40,8 @@ object DbSpec extends Specification {
             runner.run
           }
           case "ngram" => {
-
-            val featuresFile = "/tmp/ngrams.txt"
-            val sortedFeaturesFile = "/tmp/ngrams.sorted"
-
-
             val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
-            val feature = new MongoFeatureExtractor(features, featuresFile)
-            feature.run
-
-            val sorter = new Sorter(featuresFile, sortedFeaturesFile)
-            sorter.run
-
-            val lines = sorter.lines
-
-            //val runner = new MongoStreamDetector("n", Some(lines))
-            //val runner = new MongoExternallySorted(sortedFeaturesFile)
-            val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile, Some(lines))
-            //val runner = new ParalellFetchMongoExternallySorted(sortedFeaturesFile, Some(lines))
-            //val runner = new CmdlineMongoExternallySorted(sortedFeaturesFile, Some(lines))
-            runner.run
+            multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)
           }
         }
       }
