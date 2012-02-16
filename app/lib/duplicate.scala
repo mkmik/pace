@@ -95,7 +95,7 @@ trait ParallelCollector[A] extends CollectingActor[A] {
   val cpus = runtime.availableProcessors
 
   def threads = Model.cores.getOrElse(cpus) * boost
-  def boost = Model.conf.getInt("threadPoolBoost").getOrElse(4)
+  def boost = Model.conf.getInt("pace.threadPoolBoost").getOrElse(4)
 
   def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
                                                         new LinkedBlockingQueue(0 + 8 * threads),
@@ -150,6 +150,7 @@ object Duplicates extends ParallelCollector[Duplicate] {
 
     println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(Model.windowSize, Model.limit))
+    println("THREADS %s".format(threads))
     println("FOUND DUPS %s".format(dups))
     println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
     println("TRUE POSITIVES %s".format(collector.truePositives))
