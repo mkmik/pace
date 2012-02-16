@@ -39,7 +39,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
 
   def run(limit: Option[Int]) {
     val totalRecords = source.count
-    val allDocs = source.find() map MongoUtils.toDocument
+    val allDocs = source.find().sort(Map("n" -> 1)) map MongoUtils.toDocument
 
     val limitedDocs = limit match {
       case Some(x) => allDocs.take(x)
