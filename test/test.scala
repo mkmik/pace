@@ -39,6 +39,10 @@ object DbSpec extends Specification {
             val runner = new MongoStreamDetector(Model.sortOn)
             runner.run
           }
+          case "simhash" => {
+            val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor
+            multiPass("/tmp/simhash.txt", "/tmp/simhash.sorted", features)
+          }
           case "ngram" => {
             val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
             multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)

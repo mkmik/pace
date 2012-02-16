@@ -30,6 +30,20 @@ trait NGramValueExtractor extends ValueExtractor[String] {
 }
 
 
+trait SimhashValueExtractor extends ValueExtractor[String] {
+  def extractValue(field: Field): Seq[String] = {
+    field match {
+      case StringField(value) => {
+        val hash = Simhash.simhash(value)
+        for(i <- 0 until Simhash.bits)
+          yield Integer.toHexString(Simhash.rotated(hash, i)).padTo(Simhash.bits/4, "0").mkString
+      }
+      case _ => throw new Exception("unsupported field type")
+    }
+  }
+}
+
+
 class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[String]{
   val source = MongoConnection()("pace")("people")
 

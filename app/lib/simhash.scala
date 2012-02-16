@@ -21,5 +21,6 @@ object Simhash {
     sim
   }
 
-  def rotated(i: Int) = Integer.rotateLeft(i, 1)
+  def rotated(i: Int): Int = rotated(i, 1)
+  def rotated(i: Int, bits: Int): Int = Integer.rotateLeft(i, bits)
 }
