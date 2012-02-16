@@ -57,6 +57,8 @@ trait Config {
   def ngramSize = 3
   def maxNgrams = 4
 
+  def simhashRotationStep = 2
+
   def algo = "singleField"
 }
 
@@ -72,6 +74,8 @@ trait OverrideConfig extends Config {
 
   override def ngramSize = conf.getInt("pace.ngramSize").getOrElse(super.ngramSize)
   override def maxNgrams = conf.getInt("pace.maxNgrams").getOrElse(super.maxNgrams)
+
+  override def simhashRotationStep = conf.getInt("pace.simhashRotationStep").getOrElse(super.simhashRotationStep)
 
   override def algo = conf.getString("pace.algo").getOrElse(super.algo)
 }

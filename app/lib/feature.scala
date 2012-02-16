@@ -35,7 +35,7 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
     field match {
       case StringField(value) => {
         val hash = Simhash.simhash(value)
-        for(i <- 0 until Simhash.bits)
+        for(i <- new Range(0, Simhash.bits, Model.simhashRotationStep))
           yield Integer.toHexString(Simhash.rotated(hash, i)).padTo(Simhash.bits/4, "0").mkString
       }
       case _ => throw new Exception("unsupported field type")
