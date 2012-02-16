@@ -23,7 +23,7 @@ object DbSpec extends Specification {
 
       val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
       val feature = new MongoFeatureExtractor(features, "/tmp/ngrams.txt")
-      //feature.run
+      feature.run
 
       println("sorting")
 
@@ -40,9 +40,9 @@ object DbSpec extends Specification {
 
       //val runner = new MongoStreamDetector("n", Some(lines))
       //val runner = new MongoExternallySorted("/tmp/hashes.sorted")
-      //val runner = new PrefetchingMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
+      val runner = new PrefetchingMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
       //val runner = new ParalellFetchMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
-      val runner = new CmdlineMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
+      //val runner = new CmdlineMongoExternallySorted("/tmp/ngrams.sorted", Some(lines))
       runner.run
 
       "test" must startWith("test")
