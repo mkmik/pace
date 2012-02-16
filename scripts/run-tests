@@ -1,0 +1,19 @@
+#!/bin/sh
+
+REPORT=pace-stats/times.csv
+
+run() {
+    play -Dpace.reportFile=$REPORT "$@" test
+}
+
+CORES=4
+
+rm $REPORT
+for s in 100 1000; do
+
+    #for w in 10 100 200 400 1000; do
+    for w in 10 11 12 13; do
+        run -Dpace.cores=$CORES -Dpace.windowSize=$w -Dpace.limit=$s 
+    done
+
+done
