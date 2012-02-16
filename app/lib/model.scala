@@ -46,16 +46,28 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
-//  val limit = Some(100)
-  val limit = None
-  val windowSize = 10
-  val threshold = 0.90
+  def limit: Option[Int] = None
+  def windowSize = 10
+  def threshold = 0.90
 
   val mongoDb = MongoConnection()("pace")
-  val sortOn = "n"
+  def sortOn = "n"
 
-  val ngramSize = 3
-  val maxNgrams = 4
+  def ngramSize = 3
+  def maxNgrams = 4
+}
+
+trait OverrideConfig extends Config {
+  val conf = OptionalConfigFactory.load("conf/pace.conf")
+
+  override def limit = conf.getInt("pace.limit")
+  override def windowSize = conf.getInt("pace.windowSize").getOrElse(super.windowSize)
+  override def threshold = conf.getDouble("pace.threshold").getOrElse(super.threshold)
+
+  override def sortOn = conf.getString("pace.sortOn").getOrElse(super.sortOn)
+
+  override def ngramSize = conf.getInt("pace.ngramSize").getOrElse(super.ngramSize)
+  override def maxNgrams = conf.getInt("pace.maxNgrams").getOrElse(super.maxNgrams)
 }
 
 trait PaperModel {
@@ -84,4 +96,4 @@ trait OpenAireModel {
 }
 
 //object Model extends Config with OpenAireModel
-object Model extends Config with PaperModel
+object Model extends OverrideConfig with PaperModel

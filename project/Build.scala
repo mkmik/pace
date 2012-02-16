@@ -21,7 +21,9 @@ object ApplicationBuild extends Build {
 
       "com.jsuereth" %% "scala-arm" % "1.2",
 
-      "net.sf.opencsv" % "opencsv" % "2.1"
+      "net.sf.opencsv" % "opencsv" % "2.1",
+
+      "com.typesafe.config" % "config" % "0.2.1"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
