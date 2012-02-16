@@ -62,7 +62,12 @@ class MongoDBCollector(val collectionName: String) extends Collector {
     }
   }
 
-  def realDups = Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate"))
+  def shrinkingFactor: Double = Model.limit match {
+    case Some(l) => l.toDouble / Model.mongoDb("people").count.toDouble
+    case None => 1.0
+  }
+
+  def realDups = (Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
 
 trait CollectingActor[A] {
@@ -118,14 +123,9 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 object Duplicates extends ParallelCollector[Duplicate] {
 
   def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
-                     windowSize: Int = Model.windowSize, limit: Option[Int] = Model.limit, totalRecords: Option[Long] = None) = {
+                     windowSize: Int = Model.windowSize, totalRecords: Option[Long] = None) = {
 
-    val limitedDocs = limit match {
-      case Some(x) => allDocs.take(x)
-      case None => allDocs
-    }
-
-    val docs = new ProgressReportingIterator(limitedDocs, "Dups", totalRecords)
+    val docs = new ProgressReportingIterator(allDocs, "Dups", totalRecords)
 
     var window = Queue[Document]()
 
@@ -145,7 +145,9 @@ object Duplicates extends ParallelCollector[Duplicate] {
   def report(collector: MongoDBCollector) {
     println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(Model.windowSize, Model.limit))
-    println("FALSE POSITIVES %s".format(collector.dups))
+    println("FOUND DUPS %s".format(collector.dups))
+    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
+    println("TRUE POSITIVES %s".format(collector.truePositives))
     println("PRECISION %s".format(collector.precision))
     println("RECALL %s".format(collector.recall))
   }
