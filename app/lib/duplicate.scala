@@ -152,7 +152,7 @@ object Duplicates extends ParallelCollector[Duplicate] {
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
     for (r <- window) {
-      if (pivot != r) {
+      if (pivot.identifier != r.identifier) {
         val d = DistanceAlgo.distance(pivot, r)
         if (d > Model.threshold)
           collectorActor ! Duplicate(d, pivot, r)
