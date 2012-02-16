@@ -55,6 +55,8 @@ trait Config {
 
   def ngramSize = 3
   def maxNgrams = 4
+
+  def algo = "singleField"
 }
 
 trait OverrideConfig extends Config {
@@ -68,6 +70,8 @@ trait OverrideConfig extends Config {
 
   override def ngramSize = conf.getInt("pace.ngramSize").getOrElse(super.ngramSize)
   override def maxNgrams = conf.getInt("pace.maxNgrams").getOrElse(super.maxNgrams)
+
+  override def algo = conf.getString("pace.algo").getOrElse(super.algo)
 }
 
 trait PaperModel {

@@ -26,16 +26,16 @@ trait Detector {
   def run
 }
 
-class MongoStreamDetector(val key: String, val totalRecords: Option[Long] = None) extends Detector {
+class MongoStreamDetector(val key: String) extends Detector {
   def run {
     val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
 
-    val docs = Model.limit match {
-      case Some(x) => rs.take(x)
-      case None => rs
+    val (docs, totalRecords) = Model.limit match {
+      case Some(x) => (rs.take(x), x)
+      case None => (rs, source.count.toInt)
     }
 
-    Duplicates.windowedDetect(docs, collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(docs, collector, Model.windowSize, totalRecords=Some(totalRecords))
   }
 }
 
