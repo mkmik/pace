@@ -33,11 +33,7 @@ trait NGramValueExtractor extends ValueExtractor[String] {
 trait SimhashValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field): Seq[String] = {
     field match {
-      case StringField(value) => {
-        val hash = Simhash.simhash(value.toLowerCase)
-        for(i <- new Range(0, Simhash.bits, Model.simhashRotationStep))
-          yield Integer.toHexString(Simhash.rotated(hash, i)).padTo(Simhash.bits/4, "0").mkString
-      }
+      case StringField(value) => Model.simhashAlgo.rotatedSimhash(value.toLowerCase, Model.simhashRotationStep)
       case _ => throw new Exception("unsupported field type")
     }
   }
