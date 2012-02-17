@@ -54,7 +54,7 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
 }
 
 
-class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[String]{
+class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[String] with BlockingCollectingActor[String] {
   val source = MongoConnection()("pace")("people")
 
   def run {
@@ -82,7 +82,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
           for(doc <- docs) {
             pool execute {
               for(f <- extractor.extract(doc))
-                collectorActor ! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
+                collectorActor !! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
             }
           }
       }

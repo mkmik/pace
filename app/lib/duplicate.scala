@@ -88,7 +88,25 @@ trait CollectingActor[A] {
       }
     }
   }
+}
 
+trait BlockingCollectingActor[A] extends CollectingActor[A] {
+  override def makeCollectorActor(collector: GenericCollector[A]): Actor = actor {
+    var n = 0
+    loop {
+      react {
+        case Stop => {
+          reply(n)
+          exit('stop)
+        }
+        case dup: A => {
+          n += 1
+          collector.collect(dup)
+          reply(true)
+        }
+      }
+    }
+  }
 }
 
 trait ParallelCollector[A] extends CollectingActor[A] {
