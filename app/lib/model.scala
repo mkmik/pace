@@ -60,7 +60,7 @@ trait Config {
   def simhashRotationStep = 2
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
-  def algo = "singleField"
+  def scanner: Scanner = SingleFieldScanner
 }
 
 trait OverrideConfig extends Config {
@@ -85,7 +85,14 @@ trait OverrideConfig extends Config {
     case None => super.simhashAlgo
   }
 
-  override def algo = conf.getString("pace.algo").getOrElse(super.algo)
+  override def scanner = conf.getString("pace.algo") match {
+    case Some("singleField") => SingleFieldScanner
+    case Some("mergedSimhash") => MergedSimhashScanner
+    case Some("simhash") => MultiPassSimhashScanner
+    case Some("ngram") => NgramScanner
+    case None => super.scanner
+  }
+
 }
 
 trait PaperModel {
