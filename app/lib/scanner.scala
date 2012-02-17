@@ -13,8 +13,7 @@ object SingleFieldScanner extends Scanner {
 
 trait FeaturedScanner {
   def multiPass[A](featuresFile: String, sortedFeaturesFile: String, extractor: FeatureExtractor[A]) = {
-    val feature = new MongoFeatureExtractor(extractor, featuresFile)
-    feature.run
+    new MongoFeatureExtractor(extractor, featuresFile).run
 
     val sorter = new Sorter(featuresFile, sortedFeaturesFile)
     sorter.run
