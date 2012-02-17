@@ -54,7 +54,7 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
 }
 
 
-class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[String] with BlockingCollectingActor[String] {
+class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String) extends ParallelCollector[Seq[String]] {
   val source = MongoConnection()("pace")("people")
 
   def run {
@@ -73,16 +73,17 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
     val docs = new ProgressReportingIterator(limitedDocs, "Features", Some(totalRecords))
 
     for(sink <- managed(new PrintWriter(new File(fileName)))) {
-      object fileCollector extends GenericCollector[String] {
-        def collect(line: String) = sink.println(line)
+      object fileCollector extends GenericCollector[Seq[String]] {
+        def collect(lines: Seq[String]) = for(line <- lines) sink.println(line)
       }
 
       runWithCollector(fileCollector) {
         (pool, collectorActor) =>
-          for(doc <- docs) {
+          for(page <- docs.grouped(60)) {
             pool execute {
-              for(f <- extractor.extract(doc))
-                collectorActor !! "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value)
+              collectorActor ! (for(doc <- page;
+                                    f <- extractor.extract(doc))
+                                yield "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value))
             }
           }
       }

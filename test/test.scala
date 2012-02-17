@@ -38,9 +38,7 @@ object DbSpec extends Specification {
         def step = i
       }
 
-      val feature = new MongoFeatureExtractor(extractor, featuresFile.format(i)) {
-        override def threads = 2
-      }
+      val feature = new MongoFeatureExtractor(extractor, featuresFile.format(i))
       feature.run
       
       val sorter = new Sorter(featuresFile.format(i), sortedFeaturesFile.format(i))
