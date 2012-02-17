@@ -28,6 +28,33 @@ object DbSpec extends Specification {
     runner.run
   }
 
+  def simhash(featuresFile: String, sortedFeaturesFile: String) = {
+    var last = (0.0, 0.0, 0)
+
+    val collector = new MongoDBCollector("candidates")
+      
+    for(i <- 0 until 8)  {
+      val extractor = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor {
+        def step = i
+      }
+
+      val feature = new MongoFeatureExtractor(extractor, featuresFile.format(i)) {
+        override def threads = 2
+      }
+      feature.run
+      
+      val sorter = new Sorter(featuresFile.format(i), sortedFeaturesFile.format(i))
+      sorter.run
+      
+      val lines = sorter.lines
+      
+      val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile.format(i), Some(lines), existingCollector=Some(collector))
+      val (precision, recall, time) = runner.run
+      last = (precision, recall, last._3 + time)
+    }
+
+    last 
+  }
 
   "pace" should {
     "rule" in {
@@ -39,9 +66,12 @@ object DbSpec extends Specification {
             val runner = new MongoStreamDetector(Model.sortOn)
             runner.run
           }
-          case "simhash" => {
-            val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor
+          case "mergedSimhash" => {
+            val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with RotatedSimhashValueExtractor
             multiPass("/tmp/simhash.txt", "/tmp/simhash.sorted", features)
+          }
+          case "simhash" => {
+            simhash("/tmp/simhash-%s.txt", "/tmp/simhash-%s.sorted")
           }
           case "ngram" => {
             val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
