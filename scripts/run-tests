@@ -28,14 +28,14 @@ REPORT=pace-stats/cores.csv
 REPORT=pace-stats/simhash.csv
 
 rm -f $REPORT
-for s in 1 2 4 8; do
+for s in 8 4 2 1; do
     run -Dpace.algo=simhash -Dpace.simhashRotationStep=$s -Dpace.windowSize=100
 done
 
 
-REPORT=pace-stats/ngram.csv
+#REPORT=pace-stats/ngram.csv
 
-rm -f $REPORT
-for s in 2 3 4 5; do
-    run -Dpace.algo=ngram -Dpace.ngramSize=$s -Dpace.windowSize=10
-done
+#rm -f $REPORT
+#for s in 2 3 4 5; do
+#    run -Dpace.algo=ngram -Dpace.ngramSize=$s -Dpace.windowSize=10
+#done
