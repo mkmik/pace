@@ -1,5 +1,7 @@
 package afm
 
+import scala.math._
+
 
 abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) {
   def concat(l: List[String]) = l.reduceLeft(_ + " " + _)
@@ -25,7 +27,9 @@ object DistanceAlgo {
 }
 
 
-case class Levenstein(w: Double) extends DistanceAlgo(w, new com.wcohen.ss.Levenstein())
+case class Levenstein(w: Double) extends DistanceAlgo(w, new com.wcohen.ss.Levenstein()) {
+  override def distance(a: String, b: String) = 1/pow((abs(super.distance(a, b)) + 1), 0.1)
+}
 
 case class JaroWinkler(w: Double) extends DistanceAlgo(w, new com.wcohen.ss.JaroWinkler())
 
