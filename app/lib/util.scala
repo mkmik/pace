@@ -8,7 +8,7 @@ class ProgressReportingIterator[A](val iterator: Iterator[A], val label: String 
   def hasNext = iterator.hasNext
   def next = {
     n += 1
-    if (n % 1000 == 0) {
+    if (n % Model.progressStep == 0) {
       val percent = totalRecords match {
         case Some(t) => "(%s%%)".format(round(100.0 * n / t))
         case None => ""

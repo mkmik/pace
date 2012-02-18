@@ -61,6 +61,8 @@ trait Config {
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
   def scanner: Scanner = SingleFieldScanner
+
+  def progressStep = 1000
 }
 
 trait OverrideConfig extends Config {
@@ -93,6 +95,7 @@ trait OverrideConfig extends Config {
     case None => super.scanner
   }
 
+  override def progressStep = conf.getInt("pace.progress.step").getOrElse(super.progressStep)
 }
 
 trait PaperModel {
