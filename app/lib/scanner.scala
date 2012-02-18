@@ -2,6 +2,7 @@ package afm
 
 
 trait Scanner {
+  implicit val collector = new MongoDBCollector("candidates")
   def run: (Double, Double, Int)
 }
 
@@ -12,6 +13,8 @@ object SingleFieldScanner extends Scanner {
 
 
 trait FeaturedScanner {
+  self: Scanner =>
+
   def multiPass[A](featuresFile: String, sortedFeaturesFile: String, extractor: FeatureExtractor[A]) = {
     new MongoFeatureExtractor(extractor, featuresFile).run
 
@@ -49,8 +52,6 @@ trait MultiPassScanner[A] extends Scanner {
   def simhash(featuresFile: String, sortedFeaturesFile: String) = {
     var last = (0.0, 0.0, 0)
 
-    val collector = new MongoDBCollector("candidates")
-      
     for(i <- 0 until 8)  {
       val extractor = extractorForIteration(i)
 
@@ -62,7 +63,7 @@ trait MultiPassScanner[A] extends Scanner {
       
       val lines = sorter.lines
       
-      val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile.format(i), Some(lines), existingCollector=Some(collector))
+      val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile.format(i), Some(lines))
       val (precision, recall, time) = runner.run
       last = (precision, recall, last._3 + time)
     }
