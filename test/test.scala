@@ -11,9 +11,7 @@ import scala.sys.runtime
 
 object DbSpec extends Specification {
 
-  def reportToCsv(metrics: (Double, Double, Int), time: Long) {
-    val (precision, recall, candidates) = metrics
-
+  def reportToCsv(metrics: Metrics, time: Long) {
     val size = Model.limit match {
       case Some(x) => x
       case None => Model.mongoDb("people").count
@@ -26,6 +24,8 @@ object DbSpec extends Specification {
     for(report <- managed(new PrintWriter(new FileWriter(reportFileName , true)))) {
       if(!exists)
         report.println("size,window, cores, threshold,time,precision,recall,candidates")
+
+      val Metrics(precision, recall, candidates) = metrics
       report.println((size, Model.windowSize, cores, Model.threshold, time/1000, precision, recall, candidates).productIterator.map(_.toString).mkString(","))
     }
   }

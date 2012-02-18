@@ -175,7 +175,7 @@ object Duplicates extends ParallelCollector[Duplicate] {
     println("PRECISION %s".format(precision))
     println("RECALL %s".format(recall))
 
-    (precision, recall, dups)
+    Metrics(precision, recall, dups)
   }
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {

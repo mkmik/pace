@@ -17,12 +17,14 @@ import scala.collection.JavaConverters._
 import au.com.bytecode.opencsv.CSVReader
 
 
+case class Metrics(val precision: Double, val recall: Double, val dups: Int)
+
 trait Detector {
   val options = new MongoOptions()
   options.connectionsPerHost = 40
   val source = new MongoConnection(new Mongo("127.0.0.1", options))("pace")("people")
 
-  def run: (Double, Double, Int)
+  def run: Metrics
 }
 
 class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector) extends Detector {
@@ -49,7 +51,7 @@ class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = 
       Duplicates.windowedDetect(rs, collector, Model.windowSize, totalRecords=totalRecords)
     }
 
-    (0.0, 0.0, 0)
+    Metrics(0.0, 0.0, 0)
   }
 }
 
