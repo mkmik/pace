@@ -5,3 +5,4 @@ target
 tmp
 *~
 *.pyc
+conf/pace.conf
