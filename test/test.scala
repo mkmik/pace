@@ -32,6 +32,7 @@ object DbSpec extends Specification {
 
   "pace" should {
     "rule" in {
+      Model.fields must not be empty
 
       println("running")
       val (metrics, time) = timeTook { Model.scanner.run }

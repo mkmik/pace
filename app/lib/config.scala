@@ -15,4 +15,5 @@ class OptionalConfig(val conf: com.typesafe.config.Config) {
   def getInt(implicit path: String) = safe(conf.getInt)
   def getString(implicit path: String) = safe(conf.getString)
   def getDouble(implicit path: String) = safe(conf.getDouble)
+  def getObject(implicit path: String) = safe(conf.getObject)
 }

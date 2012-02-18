@@ -3,6 +3,7 @@ package afm
 import scala.collection._
 import scala.collection.immutable.Map
 import com.mongodb.casbah.Imports._
+import com.typesafe.config.ConfigValue
 
 
 sealed abstract case class FieldDef[A](val name: String, algo: DistanceAlgo)
@@ -46,6 +47,8 @@ class Document (val fields: Map[String, Field]) {
 /*! Configuration
  */
 trait Config {
+  val fields: List[FieldDef[_]]
+
   def cores: Option[Int] = None
   def limit: Option[Int] = None
   def windowSize = 10
@@ -123,5 +126,43 @@ trait OpenAireModel {
   )
 }
 
+trait ConfigurableModel extends OverrideConfig {
+  override val fields= parseFields
+
+  def parseFields: List[FieldDef[_]] = {
+    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
+
+    conf.getObject("pace.model") match {
+      case Some(model) => {
+        def parseField(name: String, cfg: ConfigValue) = {
+          val weight = conf.getDouble("pace.model.%s.weight".format(name)).getOrElse(1.0)
+
+          val algo = conf.getString("pace.model.%s.algo".format(name)) match {
+            case Some("JaroWinkler") => JaroWinkler(_)
+            case Some("Null") => (_: Double) => NullDistanceAlgo()
+            case None => (_: Double) => NullDistanceAlgo()
+          }
+
+          val field = conf.getString("pace.model.%s.type".format(name)) match {
+            case Some("Int") => IntFieldDef(_, _)
+            case Some("String") => StringFieldDef(_, _)
+            case None => StringFieldDef(_, _)
+          }
+
+          field(name, algo(weight))
+        }
+
+        val res = for(name <- model.keySet)
+                  yield parseField(name, model.get(name))
+        res.toList
+      }
+      case None => List()
+    }
+  }
+}
+
 //object Model extends Config with OpenAireModel
-object Model extends OverrideConfig with PaperModel
+//object Model extends OverrideConfig with PaperModel
+
+object Model extends OverrideConfig with ConfigurableModel
