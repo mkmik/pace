@@ -64,8 +64,9 @@ trait MultiPassScanner[A] extends Scanner {
       val lines = sorter.lines
       
       val runner = new PrefetchingMongoExternallySorted(sortedFeaturesFile.format(i), Some(lines))
-      val (precision, recall, time) = runner.run
-      last = (precision, recall, last._3 + time)
+      val (precision, recall, dups) = runner.run
+      println("Increase in: Precision: %s, Recall: %s, Dups %s".format(precision - last._1, recall - last._2, dups - last._3))
+      last = (precision, recall, dups)
     }
 
     last 
