@@ -101,31 +101,6 @@ trait OverrideConfig extends Config {
   override def progressStep = conf.getInt("pace.progress.step").getOrElse(super.progressStep)
 }
 
-trait PaperModel {
-  val fields = List(
-    IntFieldDef("n", NullDistanceAlgo()),
-    StringFieldDef("firstName", JaroWinkler(1.0)),
-    StringFieldDef("lastName", JaroWinkler(1.0)),
-    StringFieldDef("country", JaroWinkler(1.0)),
-    StringFieldDef("birthDate", JaroWinkler(1.0)),
-//    ListFieldDef("context", JaroWinkler(0.0)),
-    StringFieldDef("kind", NullDistanceAlgo()),
-    IntFieldDef("relatedTo", NullDistanceAlgo())
-  )
-}
-
-
-trait OpenAireModel {
-  val fields = List(
-    StringFieldDef("dri_objidentifier", NullDistanceAlgo()),
-    StringFieldDef("dc_title", JaroWinkler(1.0)),
-    StringFieldDef("dc_language", JaroWinkler(1.0)),
-    ListFieldDef("dc_creator", JaroWinkler(1.0)) ,
-    StringFieldDef("dc_description", JaroWinkler(0.0)),
-    StringFieldDef("oaf_affiliationname", JaroWinkler(0))
-  )
-}
-
 trait ConfigurableModel extends OverrideConfig {
   override val fields= parseFields
 
@@ -162,7 +137,4 @@ trait ConfigurableModel extends OverrideConfig {
   }
 }
 
-//object Model extends Config with OpenAireModel
-//object Model extends OverrideConfig with PaperModel
-
-object Model extends OverrideConfig with ConfigurableModel
+object Model extends ConfigurableModel
