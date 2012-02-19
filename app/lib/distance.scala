@@ -17,9 +17,9 @@ abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.Abstra
 }
 
 object DistanceAlgo {
-  def distance(a: Document, b: Document) = {
-    val w = Model.fields.map(_.algo.weight).reduceLeft(_ + _)
-    (for(i <- Model.fields)
+  def distance(a: Document, b: Document)(implicit config: Config) = {
+    val w = config.fields.map(_.algo.weight).reduceLeft(_ + _)
+    (for(i <- config.fields)
      yield (if (i.algo.weight == 0) 0
             else
               i.algo.weight * i.algo.distance(a.fields(i.name), b.fields(i.name)))).reduceLeft(_ + _) / w

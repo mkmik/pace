@@ -7,11 +7,13 @@ import scala.math.round
 
 
 trait FeatureExtractor[A] {
+  val config = implicitly[Config]
+
   def extract(doc: Document): Seq[A]
 }
 
 trait ValueExtractor[A] {
-  def extractValue(field: Field): Seq[A]
+  def extractValue(field: Field)(implicit config: Config): Seq[A]
 }
 
 class FieldFeatureExtractor[A](val field: FieldDef[A]) extends FeatureExtractor[A] {
@@ -21,9 +23,9 @@ class FieldFeatureExtractor[A](val field: FieldDef[A]) extends FeatureExtractor[
 }
 
 trait NGramValueExtractor extends ValueExtractor[String] {
-  def extractValue(field: Field): Seq[String] = {
+  def extractValue(field: Field)(implicit config: Config): Seq[String] = {
     field match {
-      case StringField(value) => value.sliding(Model.ngramSize).take(Model.maxNgrams).toSeq
+      case StringField(value) => value.sliding(config.ngramSize).take(config.maxNgrams).toSeq
       case _ => throw new Exception("unsupported field type")
     }
   }
@@ -31,9 +33,9 @@ trait NGramValueExtractor extends ValueExtractor[String] {
 
 
 trait RotatedSimhashValueExtractor extends ValueExtractor[String] {
-  def extractValue(field: Field): Seq[String] = {
+  def extractValue(field: Field)(implicit config: Config): Seq[String] = {
     field match {
-      case StringField(value) => Model.simhashAlgo.rotatedSimhash(value.toLowerCase, Model.simhashRotationStep)
+      case StringField(value) => config.simhashAlgo.rotatedSimhash(value.toLowerCase, config.simhashRotationStep)
       case _ => throw new Exception("unsupported field type")
     }
   }
@@ -42,10 +44,10 @@ trait RotatedSimhashValueExtractor extends ValueExtractor[String] {
 trait SimhashValueExtractor extends ValueExtractor[String] {
   def step: Int
 
-  def extractValue(field: Field): Seq[String] = {
+  def extractValue(field: Field)(implicit config: Config): Seq[String] = {
     field match {
       case StringField(value) => {
-        val hash = Integer.rotateLeft(Model.simhashAlgo.simhash(value.toLowerCase), step * Model.simhashRotationStep)
+        val hash = Integer.rotateLeft(config.simhashAlgo.simhash(value.toLowerCase), step * config.simhashRotationStep)
         List(Integer.toHexString(hash).reverse.padTo(Simhash.bits/4, "0").reverse.mkString)
       }
       case _ => throw new Exception("unsupported field type")
@@ -58,7 +60,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
   val source = MongoConnection()("pace")("people")
 
   def run {
-    run(Model.limit)
+    run(config.limit)
   }
 
   def run(limit: Option[Int]) {

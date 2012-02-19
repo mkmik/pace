@@ -27,20 +27,20 @@ trait Detector {
   def run: Metrics
 }
 
-class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector) extends Detector {
+class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
   def run = {
     val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
 
-    val (docs, totalRecords) = Model.limit match {
+    val (docs, totalRecords) = config.limit match {
       case Some(x) => (rs.take(x), x)
       case None => (rs, source.count.toInt)
     }
 
-    Duplicates.windowedDetect(docs, collector, Model.windowSize, totalRecords=Some(totalRecords))
+    Duplicates.windowedDetect(docs, collector, config.windowSize, totalRecords=Some(totalRecords))
   }
 }
 
-class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None) extends Detector {
+class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None)(implicit config: Config) extends Detector {
   def run = {
     val collector = new MongoDBCollector("candidates")
 
@@ -48,14 +48,14 @@ class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = 
       val key = "h%s".format(i)
 
       val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
-      Duplicates.windowedDetect(rs, collector, Model.windowSize, totalRecords=totalRecords)
+      Duplicates.windowedDetect(rs, collector, config.windowSize, totalRecords=totalRecords)
     }
 
     Metrics(0.0, 0.0, 0)
   }
 }
 
-class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector) extends Detector {
+class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
   def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
@@ -74,12 +74,12 @@ class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = N
       }
     }
 
-    Duplicates.windowedDetect(new RandomAccessIterator(), collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(new RandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
   }
 }
 
 
-class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector) extends Detector {
+class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
   def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
@@ -106,7 +106,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
       def getId(line: String) = Integer.parseInt(line.split(":")(1))
     }
 
-    Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(new PrefetchingRandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
   }
 }
 
@@ -144,7 +144,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
       fifoCollector.q.close
     }
 
-    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
   }
 
 }
@@ -197,7 +197,7 @@ class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Lo
       fifoCollector.q.close
     }
 
-    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, Model.windowSize, totalRecords=totalRecords)
+    Duplicates.windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
   }
 
 }

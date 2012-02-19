@@ -11,14 +11,14 @@ import scala.sys.runtime
 
 object DbSpec extends Specification {
 
-  def reportToCsv(metrics: Metrics, time: Long) {
-    val size = Model.limit match {
+  def reportToCsv(metrics: Metrics, time: Long)(implicit config: OverrideConfig) {
+    val size = config.limit match {
       case Some(x) => x
-      case None => Model.mongoDb("people").count
+      case None => config.mongoDb("people").count
     }
-    val cores = Model.cores.getOrElse(runtime.availableProcessors)
+    val cores = config.cores.getOrElse(runtime.availableProcessors)
 
-    val reportFileName = Model.conf.getString("pace.reportFile").getOrElse("/tmp/pace.csv")
+    val reportFileName = config.conf.getString("pace.reportFile").getOrElse("/tmp/pace.csv")
     val exists = new File(reportFileName).exists
 
     for(report <- managed(new PrintWriter(new FileWriter(reportFileName , true)))) {
@@ -26,16 +26,18 @@ object DbSpec extends Specification {
         report.println("size,window, cores, threshold,time,precision,recall,candidates")
 
       val Metrics(precision, recall, candidates) = metrics
-      report.println((size, Model.windowSize, cores, Model.threshold, time/1000, precision, recall, candidates).productIterator.map(_.toString).mkString(","))
+      report.println((size, config.windowSize, cores, config.threshold, time/1000, precision, recall, candidates).productIterator.map(_.toString).mkString(","))
     }
   }
 
   "pace" should {
     "rule" in {
-      Model.fields must not be empty
+      val config = Model
+
+      config.fields must not be empty
 
       println("running")
-      val (metrics, time) = timeTook { Model.scanner.run }
+      val (metrics, time) = timeTook { config.scanner.run }
       println("done")
 
       reportToCsv(metrics, time)

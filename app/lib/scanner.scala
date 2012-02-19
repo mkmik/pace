@@ -8,7 +8,8 @@ trait Scanner {
 
 
 object SingleFieldScanner extends Scanner {
-  def run = new MongoStreamDetector(Model.sortOn).run
+  val config = implicitly[Config]
+  def run = new MongoStreamDetector(config.sortOn).run
 }
 
 

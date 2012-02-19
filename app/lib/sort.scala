@@ -6,13 +6,13 @@ import scala.io._
 import java.io._
 
 
-class  Sorter(val inputFile: String, val outputFile: String) {
+class Sorter(val inputFile: String, val outputFile: String)(implicit config: Config) {
 
   lazy val lines = new BufferedSource(new FileInputStream(inputFile)).getLines.length
 
   def run {
     val cpus = runtime.availableProcessors
-    val threads = Model.cores.getOrElse(cpus)
+    val threads = config.cores.getOrElse(cpus)
 
     val cmd = if (lines/cpus > 10000) "scripts/psort %s %s %s".format(inputFile, lines/threads, threads)
               else "sort %s".format(inputFile)

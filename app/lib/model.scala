@@ -138,4 +138,8 @@ trait ConfigurableModel extends OverrideConfig {
   }
 }
 
+object `package` {
+  implicit val model = Model
+}
+
 object Model extends ConfigurableModel

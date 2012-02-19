@@ -41,8 +41,8 @@ class PrintingCollector extends Collector {
   def realDups = 0
 }
 
-class MongoDBCollector(val collectionName: String) extends Collector {
-  val coll = Model.mongoDb(collectionName)
+class MongoDBCollector(val collectionName: String)(implicit config: Config) extends Collector {
+  val coll = config.mongoDb(collectionName)
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
@@ -62,12 +62,12 @@ class MongoDBCollector(val collectionName: String) extends Collector {
     }
   }
 
-  def shrinkingFactor: Double = Model.limit match {
-    case Some(l) => l.toDouble / Model.mongoDb("people").count.toDouble
+  def shrinkingFactor: Double = config.limit match {
+    case Some(l) => l.toDouble / config.mongoDb("people").count.toDouble
     case None => 1.0
   }
 
-  def realDups = (Model.mongoDb("people").count(MongoDBObject("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
+  def realDups = (config.mongoDb("people").count(MongoDBObject("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
 
 trait CollectingActor[A] {
@@ -112,8 +112,10 @@ trait BlockingCollectingActor[A] extends CollectingActor[A] {
 trait ParallelCollector[A] extends CollectingActor[A] {
   val cpus = runtime.availableProcessors
 
-  def threads = Model.cores.getOrElse(cpus) * boost
-  def boost = Model.conf.getInt("pace.threadPoolBoost").getOrElse(4)
+  val config = implicitly[OverrideConfig]
+
+  def threads = config.cores.getOrElse(cpus) * boost
+  def boost = config.conf.getInt("pace.threadPoolBoost").getOrElse(4)
 
   def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
                                                         new LinkedBlockingQueue(0 + 8 * threads),
@@ -142,7 +144,7 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 object Duplicates extends ParallelCollector[Duplicate] {
 
   def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
-                     windowSize: Int = Model.windowSize, totalRecords: Option[Long] = None) = {
+                     windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {
 
     val docs = new ProgressReportingIterator(allDocs, "Dups", totalRecords)
 
@@ -167,7 +169,7 @@ object Duplicates extends ParallelCollector[Duplicate] {
     val dups = collector.dups
 
     println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
-    println("WINDOW SIZE %s, INPUT LIMIT %s".format(Model.windowSize, Model.limit))
+    println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
     println("THREADS %s".format(threads))
     println("FOUND DUPS %s".format(dups))
     println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
@@ -182,7 +184,7 @@ object Duplicates extends ParallelCollector[Duplicate] {
     for (r <- window) {
       if (pivot.identifier != r.identifier) {
         val d = DistanceAlgo.distance(pivot, r)
-        if (d > Model.threshold)
+        if (d > config.threshold)
           collectorActor ! Duplicate(d, pivot, r)
       }
     }

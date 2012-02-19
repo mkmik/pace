@@ -26,8 +26,8 @@ object DbUtils {
     if (v == null) "" else v
   }
 
-  def toDocument(rs: ResultSet) = new Document(Map(
-    (for(field <- Model.fields)
+  def toDocument(rs: ResultSet)(implicit config: Config) = new Document(Map(
+    (for(field <- config.fields)
      yield (field.name, field match {
        case StringFieldDef(name, _) => StringField(getString(rs, name))
        case ListFieldDef(name, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
