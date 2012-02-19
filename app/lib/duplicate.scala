@@ -109,10 +109,12 @@ trait BlockingCollectingActor[A] extends CollectingActor[A] {
   }
 }
 
-trait ParallelCollector[A] extends CollectingActor[A] {
-  val cpus = runtime.availableProcessors
+trait ConfigProvider {
+  implicit val config: OverrideConfig
+}
 
-  val config = implicitly[OverrideConfig]
+trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
+  val cpus = runtime.availableProcessors
 
   def threads = config.cores.getOrElse(cpus) * boost
   def boost = config.conf.getInt("pace.threadPoolBoost").getOrElse(4)
@@ -142,6 +144,8 @@ trait ParallelCollector[A] extends CollectingActor[A] {
 }
 
 object Duplicates extends ParallelCollector[Duplicate] {
+
+  implicit val config = Model
 
   def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
                      windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {

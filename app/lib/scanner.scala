@@ -1,14 +1,14 @@
 package afm
 
 
-trait Scanner {
+trait Scanner extends ConfigProvider {
   implicit val collector = new MongoDBCollector("candidates")
   def run: Metrics
 }
 
 
 object SingleFieldScanner extends Scanner {
-  val config = implicitly[Config]
+  implicit val config = Model
   def run = new MongoStreamDetector(config.sortOn).run
 }
 
@@ -34,6 +34,8 @@ trait FeaturedScanner {
 }
 
 object NgramScanner extends Scanner with FeaturedScanner {
+  implicit val config = Model
+
   def run = {
     val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
     multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)
@@ -41,6 +43,8 @@ object NgramScanner extends Scanner with FeaturedScanner {
 }
 
 object MergedSimhashScanner extends Scanner with FeaturedScanner {
+  implicit val config = Model
+
   def run = {
     val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with RotatedSimhashValueExtractor
     multiPass("/tmp/simhash.txt", "/tmp/simhash.sorted", features)
@@ -76,6 +80,8 @@ trait MultiPassScanner[A] extends Scanner {
 }
 
 object MultiPassSimhashScanner extends Scanner with MultiPassScanner[String] {
+  implicit val config = Model
+
   def run = simhash("/tmp/simhash-%s.txt", "/tmp/simhash-%s.sorted")
 
   def extractorForIteration(i: Int) = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor {

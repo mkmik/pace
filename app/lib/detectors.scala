@@ -111,7 +111,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 }
 
 
-class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector) extends Detector with ParallelCollector[Document] {
+class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: OverrideConfig) extends Detector with ParallelCollector[Document] {
   override def threads = 20
 
   def run = {
@@ -150,7 +150,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
 }
 
 
-class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector) extends Detector with ParallelCollector[Document] {
+class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: OverrideConfig) extends Detector with ParallelCollector[Document] {
   override def threads = 16
 
   def run = {
