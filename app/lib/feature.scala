@@ -7,9 +7,6 @@ import scala.math.round
 
 
 trait FeatureExtractor[A] extends ConfigProvider {
-//  val config = implicitly[Config]
-//  implicit val config = Model
-
   def extract(doc: Document): Seq[A]
 }
 
