@@ -4,7 +4,7 @@ import afm.model._
 
 
 object JsonUtils {
-  def toDocument(rs: Map[String, Any])(implicit config: Config) = new Document(Map(
+  def toDocument(rs: Map[String, Any])(implicit config: Config) = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
        case IntFieldDef(name, _) => IntField(rs.get(name).getOrElse(0.0).asInstanceOf[Double].toInt)
@@ -20,7 +20,7 @@ object CSVUtils {
   def toDocument(line: Array[String])(implicit config: Config) = {
     val rs = line.iterator
 
-    new Document(Map(
+    new MapDocument(Map(
       (for(field <- config.fields)
        yield (field.name, field match {
          case IntFieldDef(name, _) => val n = rs.next; IntField(Integer.parseInt(if(n=="") "0" else n))

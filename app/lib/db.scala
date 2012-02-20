@@ -29,7 +29,7 @@ object DbUtils {
     if (v == null) "" else v
   }
 
-  def toDocument(rs: ResultSet)(implicit config: Config) = new Document(Map(
+  def toDocument(rs: ResultSet)(implicit config: Config) = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
        case IntFieldDef(name, _) => IntField(getInt(rs, name))

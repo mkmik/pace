@@ -7,7 +7,7 @@ import afm.model._
 
 
 /*! Each field is configured with a distance algo which knows how to compute
- * the distance (0-1) between the fields of two objects. */
+ the distance (0-1) between the fields of two objects. */
 trait DistanceAlgo {
   val weight: Double
 
@@ -45,7 +45,7 @@ object DistanceAlgo {
     (for(i <- config.fields)
      yield (if (i.algo.weight == 0) 0
             else
-              i.algo.weight * i.algo.distance(a.fields(i.name), b.fields(i.name)))).reduceLeft(_ + _) / w
+              i.algo.weight * i.algo.distance(a(i.name).get, b(i.name).get))).reduceLeft(_ + _) / w
   }
 }
 

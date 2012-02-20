@@ -29,7 +29,7 @@ class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) e
 object MongoUtils {
   def get[A](rs: DBObject, name: String)(implicit manifest: Manifest[A]) = rs.getAs[A](name)
 
-  def toDocument(rs: DBObject)(implicit config: Config): Document = new Document(Map(
+  def toDocument(rs: DBObject)(implicit config: Config): Document = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
        case IntFieldDef(name, _) => IntField(get[Int](rs, name).getOrElse(0))
@@ -49,7 +49,7 @@ object MongoUtils {
   }
 
   implicit def documentToMongo(doc: Document): {def toMongo: DBObject} = new {
-    def toMongo = MongoDBObject((for((k, v) <- doc.fields.toIterable.toSeq) yield (k, v.toMongo)) :_*)
+    def toMongo = MongoDBObject((for((k, v) <- doc.fields.toSeq) yield (k, v.toMongo)) :_*)
   }
 
   implicit def duplicateToMongo(dup: Duplicate): {def toMongo: DBObject} = new {
