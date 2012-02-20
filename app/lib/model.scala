@@ -13,24 +13,11 @@ case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n
 case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d)
 
 
-sealed abstract class Field {
-  def toMongo: Any
-}
+sealed abstract class Field
 
-case class IntField (val value: Int) extends Field {
-  override def toString = "Field(%s)".format(value)
-  def toMongo = value
-}
-
-case class StringField (val value: String) extends Field {
-  override def toString = "Field(%s)".format(value)
-  def toMongo = value
-}
-
-case class ListField (val values: Seq[Field]) extends Field {
-  override def toString = "ListField(%s)".format(values)
-  def toMongo = values
-}
+case class IntField (val value: Int) extends Field
+case class StringField (val value: String) extends Field
+case class ListField (val values: Seq[Field]) extends Field
 
 
 class Document (val fields: Map[String, Field]) {
@@ -38,8 +25,6 @@ class Document (val fields: Map[String, Field]) {
 
   def identifier = fields("n")
   def realIdentifier = if (fields("kind").asInstanceOf[StringField].value == "unique") identifier else fields("relatedTo")
-
-  def toMongo = MongoDBObject((for((k, v) <- fields.toIterable.toSeq) yield (k, v.toMongo)) :_*)
 }
 
 /////

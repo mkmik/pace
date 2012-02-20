@@ -3,6 +3,17 @@ package afm
 import com.mongodb.casbah.Imports._
 
 
+class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
+  import MongoUtils._
+
+  coll.drop()
+  coll.ensureIndex(MongoDBObject("d" -> 1))
+
+  def append(dup: Duplicate) = coll += dup.toMongo
+
+  def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
+}
+
 object MongoUtils {
   def get[A](rs: DBObject, name: String)(implicit manifest: Manifest[A]) = rs.getAs[A](name)
 
@@ -15,34 +26,24 @@ object MongoUtils {
      })
    ):_*
   ))
-}
 
 
-object JsonUtils {
-  def toDocument(rs: Map[String, Any])(implicit config: Config) = new Document(Map(
-    (for(field <- config.fields)
-     yield (field.name, field match {
-       case IntFieldDef(name, _) => IntField(rs.get(name).getOrElse(0.0).asInstanceOf[Double].toInt)
-       case StringFieldDef(name, _) => StringField(rs.get(name).getOrElse("").asInstanceOf[String])
-       case ListFieldDef(name, _) => throw new Exception("not implemented yet")
-     })
-   ):_*
-  ))
-}
-
-
-object CSVUtils {
-  def toDocument(line: Array[String])(implicit config: Config) = {
-    val rs = line.iterator
-
-    new Document(Map(
-      (for(field <- config.fields)
-       yield (field.name, field match {
-         case IntFieldDef(name, _) => val n = rs.next; IntField(Integer.parseInt(if(n=="") "0" else n))
-         case StringFieldDef(name, _) => StringField(rs.next)
-         case ListFieldDef(name, _) => throw new Exception("not implemented yet")
-       })
-     ):_*
-    ))
+  implicit def fieldToMongo(field: Field): {def toMongo: Any} = new {
+    def toMongo = field match {
+      case IntField(value) => value
+      case StringField(value) => value
+      case ListField(values) => values
+    }
   }
+
+  implicit def documentToMongo(doc: Document): {def toMongo: DBObject} = new {
+    def toMongo = MongoDBObject((for((k, v) <- doc.fields.toIterable.toSeq) yield (k, v.toMongo)) :_*)
+  }
+
+  implicit def duplicateToMongo(dup: Duplicate): {def toMongo: DBObject} = new {
+    def toMongo = MongoDBObject("d" -> dup.d,
+                                "left" -> dup.a.toMongo,
+                                "right" -> dup.b.toMongo)
+  }
+
 }

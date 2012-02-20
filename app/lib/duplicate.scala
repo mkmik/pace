@@ -15,10 +15,6 @@ import com.mongodb.casbah.Imports._
 
 
 case class Duplicate(val d: Double, val a: Document, val b: Document) {
-  def toMongo = MongoDBObject("d" -> d,
-                              "left" -> a.toMongo,
-                              "right" -> b.toMongo)
-
   def check = a.realIdentifier == b.realIdentifier
 }
 
@@ -62,15 +58,6 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
 class PrintingCollector(implicit val config: Config) extends Collector {
   def append(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
   def realDups = 0
-}
-
-class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
-  coll.drop()
-  coll.ensureIndex(MongoDBObject("d" -> 1))
-
-  def append(dup: Duplicate) = coll += dup.toMongo
-
-  def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
 
 trait CollectingActor[A] {
