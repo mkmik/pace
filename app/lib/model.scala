@@ -13,14 +13,14 @@ case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n
 case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d)
 
 
-sealed abstract class Field
+sealed abstract class Field[+A]
 
-case class IntField (val value: Int) extends Field
-case class StringField (val value: String) extends Field
-case class ListField (val values: Seq[Field]) extends Field
+case class IntField (val value: Int) extends Field[Int]
+case class StringField (val value: String) extends Field[String]
+case class ListField (val values: Seq[Field[String]]) extends Field[Seq[Field[String]]]
 
 
-class Document (val fields: Map[String, Field]) {
+class Document (val fields: Map[String, Field[Any]]) {
   override def toString = "Document(%s)".format(fields)
 
   def identifier = fields("n")

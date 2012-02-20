@@ -28,7 +28,7 @@ object MongoUtils {
   ))
 
 
-  implicit def fieldToMongo(field: Field): {def toMongo: Any} = new {
+  implicit def fieldToMongo(field: Field[Any]): {def toMongo: Any} = new {
     def toMongo = field match {
       case IntField(value) => value
       case StringField(value) => value
