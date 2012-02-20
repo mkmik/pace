@@ -23,7 +23,7 @@ trait Detector {
   def run: Metrics
 }
 
-class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
+class MongoStreamDetector(val key: String)(implicit collector: Collector, implicit val config: Config) extends Detector {
   def run = {
     val rs = config.source.documents(key)
 
@@ -51,7 +51,7 @@ class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = 
   }
 }
 
-class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
+class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: Collector, implicit val config: Config) extends Detector {
   def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
@@ -75,7 +75,7 @@ class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = N
 }
 
 
-class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
+class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: Collector, implicit val config: Config) extends Detector {
   def run = {
     val sortedHashes = new BufferedSource(new FileInputStream(file))
     val lines = sortedHashes.getLines
@@ -107,7 +107,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 }
 
 
-class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector with ParallelCollector[Document] {
+class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: Collector, implicit val config: Config) extends Detector with ParallelCollector[Document] {
   override def threads = 20
 
   def run = {
@@ -146,7 +146,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
 }
 
 
-class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector with ParallelCollector[Document] {
+class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Long] = None)(implicit collector: Collector, implicit val config: Config) extends Detector with ParallelCollector[Document] {
   override def threads = 16
 
   def run = {

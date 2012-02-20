@@ -26,7 +26,7 @@ trait GenericCollector[A] {
   def collect(dup: A)
 }
 
-trait Collector extends GenericCollector[Duplicate] {
+trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
   var truePositives = 0
   var dups = 0
 
@@ -34,14 +34,19 @@ trait Collector extends GenericCollector[Duplicate] {
   def recall = truePositives.asInstanceOf[Double] / realDups
 
   def realDups: Long
+
+  def shrinkingFactor: Double = config.limit match {
+    case Some(l) => l.toDouble / config.source.count.toDouble
+    case None => 1.0
+  }
 }
 
-class PrintingCollector extends Collector {
+class PrintingCollector(implicit val config: Config) extends Collector {
   def collect(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
   def realDups = 0
 }
 
-class MongoDBCollector(val coll: MongoCollection)(implicit config: Config) extends Collector {
+class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
@@ -59,11 +64,6 @@ class MongoDBCollector(val coll: MongoCollection)(implicit config: Config) exten
         truePositives += 1
       seen = seen + seenKey
     }
-  }
-
-  def shrinkingFactor: Double = config.limit match {
-    case Some(l) => l.toDouble / config.source.count.toDouble
-    case None => 1.0
   }
 
   def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
@@ -144,7 +144,7 @@ trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
 
 trait Duplicates extends ParallelCollector[Duplicate] {
 
-  def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
+  def windowedDetect(allDocs: Iterator[Document], collector: Collector,
                      windowSize: Int = config.windowSize, totalRecords: Option[Long] = None): Metrics
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
@@ -157,12 +157,12 @@ trait Duplicates extends ParallelCollector[Duplicate] {
     }
   }
 
-  def report(collector: MongoDBCollector) = {
+  def report(collector: Collector) = {
     val precision = collector.precision
     val recall = collector.recall
     val dups = collector.dups
 
-    println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
+    println("DONE, CANDIDATES RETURNED BY COLLECTOR %s".format(collector.dups))
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
     println("THREADS %s".format(threads))
     println("FOUND DUPS %s".format(dups))
@@ -176,7 +176,7 @@ trait Duplicates extends ParallelCollector[Duplicate] {
 }
 
 class SortedNeighborhood(implicit val config: Config) extends Duplicates {
-  def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
+  def windowedDetect(allDocs: Iterator[Document], collector: Collector,
                      windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {
 
     val docs = new ProgressReportingIterator(allDocs, "Dups", totalRecords)

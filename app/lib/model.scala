@@ -59,7 +59,7 @@ trait Config {
 
   private val mongoDb = MongoConnection()("pace")
   val source = new MongoDBSource(mongoDb("people"))
-  def collector = new MongoDBCollector(mongoDb("candidates"))
+  def collector: Collector = new MongoDBCollector(mongoDb("candidates"))
 
   def sortOn = "n"
 
