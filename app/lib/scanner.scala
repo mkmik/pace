@@ -34,14 +34,14 @@ trait FeaturedScanner {
 
 class NgramScanner(implicit val config: Config) extends Scanner with FeaturedScanner {
   def run = {
-    val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
+    val features = new FieldFeatureExtractor(StringFieldDef(config.sortOn, NullDistanceAlgo())) with NGramValueExtractor
     multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)
   }
 }
 
 class MergedSimhashScanner(implicit val config: Config) extends Scanner with FeaturedScanner {
   def run = {
-    val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with RotatedSimhashValueExtractor
+    val features = new FieldFeatureExtractor(StringFieldDef(config.sortOn, NullDistanceAlgo())) with RotatedSimhashValueExtractor
     multiPass("/tmp/simhash.txt", "/tmp/simhash.sorted", features)
   }
 }
@@ -77,7 +77,7 @@ trait MultiPassScanner[A] extends Scanner {
 class MultiPassSimhashScanner(implicit val config: Config) extends Scanner with MultiPassScanner[String] {
   def run = simhash("/tmp/simhash-%s.txt", "/tmp/simhash-%s.sorted")
 
-  def extractorForIteration(i: Int) = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor {
+  def extractorForIteration(i: Int) = new FieldFeatureExtractor(StringFieldDef(config.sortOn, NullDistanceAlgo())) with SimhashValueExtractor {
     def step = i
   }
 
