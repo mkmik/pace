@@ -1,4 +1,4 @@
-package afm
+package afm.util
 
 import collection.JavaConversions._
 import java.util.concurrent.{LinkedBlockingQueue, BlockingQueue, TimeUnit}

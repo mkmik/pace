@@ -5,6 +5,7 @@ import afm.model._
 import afm.io._
 import afm.duplicates._
 import afm.DbUtils._
+import afm.util._
 
 import com.mongodb.casbah.Imports._
 import java.util.concurrent.LinkedBlockingQueue
