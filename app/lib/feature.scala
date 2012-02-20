@@ -6,9 +6,9 @@ import resource._
 import scala.math.round
 
 
-trait FeatureExtractor[A] {
+trait FeatureExtractor[A] extends ConfigProvider {
 //  val config = implicitly[Config]
-  implicit val config = Model
+//  implicit val config = Model
 
   def extract(doc: Document): Seq[A]
 }
@@ -17,7 +17,7 @@ trait ValueExtractor[A] {
   def extractValue(field: Field)(implicit config: Config): Seq[A]
 }
 
-class FieldFeatureExtractor[A](val field: FieldDef[A]) extends FeatureExtractor[A] {
+class FieldFeatureExtractor[A](val field: FieldDef[A])(implicit val config: Config) extends FeatureExtractor[A] {
   self: ValueExtractor[A] =>
 
   def extract(doc: Document): Seq[A] = extractValue(doc.fields(field.name))
@@ -57,7 +57,7 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
 }
 
 
-class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String)(implicit val config: OverrideConfig) extends ParallelCollector[Seq[String]] {
+class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String)(implicit val config: Config) extends ParallelCollector[Seq[String]] {
   val source = MongoConnection()("pace")("people")
 
   def run {

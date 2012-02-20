@@ -7,8 +7,7 @@ trait Scanner extends ConfigProvider {
 }
 
 
-object SingleFieldScanner extends Scanner {
-  implicit val config = Model
+class SingleFieldScanner(implicit val config: Config) extends Scanner {
   def run = new MongoStreamDetector(config.sortOn).run
 }
 
@@ -33,18 +32,14 @@ trait FeaturedScanner {
   }
 }
 
-object NgramScanner extends Scanner with FeaturedScanner {
-  implicit val config = Model
-
+class NgramScanner(implicit val config: Config) extends Scanner with FeaturedScanner {
   def run = {
     val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with NGramValueExtractor
     multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)
   }
 }
 
-object MergedSimhashScanner extends Scanner with FeaturedScanner {
-  implicit val config = Model
-
+class MergedSimhashScanner(implicit val config: Config) extends Scanner with FeaturedScanner {
   def run = {
     val features = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with RotatedSimhashValueExtractor
     multiPass("/tmp/simhash.txt", "/tmp/simhash.sorted", features)
@@ -79,9 +74,7 @@ trait MultiPassScanner[A] extends Scanner {
 
 }
 
-object MultiPassSimhashScanner extends Scanner with MultiPassScanner[String] {
-  implicit val config = Model
-
+class MultiPassSimhashScanner(implicit val config: Config) extends Scanner with MultiPassScanner[String] {
   def run = simhash("/tmp/simhash-%s.txt", "/tmp/simhash-%s.sorted")
 
   def extractorForIteration(i: Int) = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with SimhashValueExtractor {

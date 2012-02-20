@@ -32,8 +32,7 @@ object DbSpec extends Specification {
 
   "pace" should {
     "rule" in {
-//      implicit val config: OverrideConfig = new Object() extends ConfigurableModel
-      implicit val config: OverrideConfig = Model
+      implicit val config: OverrideConfig = new Object with ConfigurableModel
 
       config.fields must not be empty
 

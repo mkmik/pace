@@ -49,6 +49,9 @@ class Document (val fields: Map[String, Field]) {
 trait Config {
   val fields: List[FieldDef[_]]
 
+  /*! Some of the object we construct here might need this configuration instance */
+  implicit val me: Config = this
+
   def cores: Option[Int] = None
   def limit: Option[Int] = None
   def windowSize = 10
@@ -63,9 +66,10 @@ trait Config {
   def simhashRotationStep = 2
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
-  def scanner: Scanner = SingleFieldScanner
+  def scanner: Scanner = new SingleFieldScanner
 
   def progressStep = 1000
+  def threadPoolBoost = 4
 }
 
 trait OverrideConfig extends Config {
@@ -91,14 +95,15 @@ trait OverrideConfig extends Config {
   }
 
   override def scanner = conf.getString("pace.algo") match {
-    case Some("singleField") => SingleFieldScanner
-    case Some("mergedSimhash") => MergedSimhashScanner
-    case Some("simhash") => MultiPassSimhashScanner
-    case Some("ngram") => NgramScanner
+    case Some("singleField") => new SingleFieldScanner
+    case Some("mergedSimhash") => new MergedSimhashScanner
+    case Some("simhash") => new MultiPassSimhashScanner
+    case Some("ngram") => new NgramScanner
     case None => super.scanner
   }
 
   override def progressStep = conf.getInt("pace.progress.step").getOrElse(super.progressStep)
+  override def threadPoolBoost = conf.getInt("pace.threadPoolBoost").getOrElse(super.threadPoolBoost)
 }
 
 trait ConfigurableModel extends OverrideConfig {
@@ -138,4 +143,3 @@ trait ConfigurableModel extends OverrideConfig {
   }
 }
 
-object Model extends ConfigurableModel
