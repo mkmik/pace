@@ -13,11 +13,11 @@ case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n
 case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d)
 
 
-sealed abstract class Field[+A]
+sealed abstract class Field[+A](val value: A)
 
-case class IntField (val value: Int) extends Field[Int]
-case class StringField (val value: String) extends Field[String]
-case class ListField (val values: Seq[Field[String]]) extends Field[Seq[Field[String]]]
+case class IntField(override val value: Int) extends Field[Int](value)
+case class StringField(override val value: String) extends Field[String](value)
+case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[Field[String]]](value)
 
 
 class Document (val fields: Map[String, Field[Any]]) {
@@ -30,8 +30,8 @@ class Document (val fields: Map[String, Field[Any]]) {
 
   override def toString = "Document(%s)".format(fields)
 
-  def identifier = fields("n")
-  def realIdentifier = if (fields("kind").asInstanceOf[StringField].value == "unique") identifier else fields("relatedTo")
+  def identifier = apply[Int]("n").get.value
+  def realIdentifier = if (apply[String]("kind").get.value == "unique") identifier else apply[Int]("relatedTo").get.value
 }
 
 /////

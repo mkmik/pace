@@ -81,7 +81,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
             pool execute {
               collectorActor ! (for(doc <- page;
                                     f <- extractor.extract(doc))
-                                yield "%s:%s".format(f.toString.trim, doc.fields("n").asInstanceOf[IntField].value))
+                                yield "%s:%s".format(f.toString.trim, doc[Int]("n").get.value))
             }
           }
       }
