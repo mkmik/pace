@@ -20,7 +20,7 @@ trait ValueExtractor[A] {
 class FieldFeatureExtractor[A](val field: FieldDef[A])(implicit val config: Config) extends FeatureExtractor[A] {
   self: ValueExtractor[A] =>
 
-  def extract(doc: Document): Seq[A] = extractValue(doc.fields(field.name).asInstanceOf[Field[A]])
+  def extract(doc: Document): Seq[A] = extractValue(doc(field.name).get)
 }
 
 trait NGramValueExtractor extends ValueExtractor[String] {

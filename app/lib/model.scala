@@ -21,6 +21,13 @@ case class ListField (val values: Seq[Field[String]]) extends Field[Seq[Field[St
 
 
 class Document (val fields: Map[String, Field[Any]]) {
+  def apply[A](name: String): Option[Field[A]] = {
+    fields.get(name) match {
+      case Some(res) => Some(res.asInstanceOf[Field[A]])
+      case None => None
+    }
+  }
+
   override def toString = "Document(%s)".format(fields)
 
   def identifier = fields("n")
