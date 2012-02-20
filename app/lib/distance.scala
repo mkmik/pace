@@ -14,7 +14,7 @@ abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.Abstra
 
   def distance[A](a: Field[A], b: Field[A]): Double = (a, b) match {
     case (StringField(av), StringField(bv)) => distance(av, bv)
-    case (ListField(av:List[StringField]), ListField(bv:List[StringField])) => distance(av.map(_.value), bv.map(_.value))
+    case (ListField(av), ListField(bv)) => distance(av.asInstanceOf[List[StringField]].map(_.value), bv.asInstanceOf[List[StringField]].map(_.value))
     case _ => throw new Exception("invalid types")
   }
 }

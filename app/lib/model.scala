@@ -12,7 +12,7 @@ import afm.detectors._
 import afm.duplicates._
 
 
-sealed abstract case class FieldDef[A](val name: String, algo: DistanceAlgo)
+sealed abstract class FieldDef[A](val name: String, val algo: DistanceAlgo)
 
 case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef[Int](n, d)
 case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n, d)

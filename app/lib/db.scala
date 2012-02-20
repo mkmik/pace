@@ -23,6 +23,7 @@ object DbUtils {
             })
 
   def getList(rs: ResultSet, column: String) = sqlArrayToList(rs.getArray(column))
+  def getInt(rs: ResultSet, column: String) = rs.getInt(column)
   def getString(rs: ResultSet, column: String) = {
     val v = rs.getString(column)
     if (v == null) "" else v
@@ -31,6 +32,7 @@ object DbUtils {
   def toDocument(rs: ResultSet)(implicit config: Config) = new Document(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
+       case IntFieldDef(name, _) => IntField(getInt(rs, name))
        case StringFieldDef(name, _) => StringField(getString(rs, name))
        case ListFieldDef(name, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
      })

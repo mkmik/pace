@@ -16,7 +16,7 @@ trait GenericCollector[A] {
 
 
 trait CollectingActor[A] {
-  case class Stop
+  case class Stop()
 
   def makeCollectorActor(collector: GenericCollector[A]): Actor = actor {
     var n = 0
@@ -26,9 +26,9 @@ trait CollectingActor[A] {
           reply(n)
           exit('stop)
         }
-        case dup: A => {
+        case dup => {
           n += 1
-          collector.collect(dup)
+          collector.collect(dup.asInstanceOf[A])
         }
       }
     }
@@ -44,9 +44,9 @@ trait BlockingCollectingActor[A] extends CollectingActor[A] {
           reply(n)
           exit('stop)
         }
-        case dup: A => {
+        case dup => {
           n += 1
-          collector.collect(dup)
+          collector.collect(dup.asInstanceOf[A])
           reply(true)
         }
       }
