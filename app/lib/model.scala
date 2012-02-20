@@ -57,7 +57,10 @@ trait Config {
   def windowSize = 10
   def threshold = 0.90
 
-  val mongoDb = MongoConnection()("pace")
+  private val mongoDb = MongoConnection()("pace")
+  val source = new MongoDBSource(mongoDb("people"))
+  def collector = new MongoDBCollector(mongoDb("candidates"))
+
   def sortOn = "n"
 
   def ngramSize = 3

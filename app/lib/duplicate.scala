@@ -41,8 +41,7 @@ class PrintingCollector extends Collector {
   def realDups = 0
 }
 
-class MongoDBCollector(val collectionName: String)(implicit config: Config) extends Collector {
-  val coll = config.mongoDb(collectionName)
+class MongoDBCollector(val coll: MongoCollection)(implicit config: Config) extends Collector {
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
@@ -63,11 +62,11 @@ class MongoDBCollector(val collectionName: String)(implicit config: Config) exte
   }
 
   def shrinkingFactor: Double = config.limit match {
-    case Some(l) => l.toDouble / config.mongoDb("people").count.toDouble
+    case Some(l) => l.toDouble / config.source.count.toDouble
     case None => 1.0
   }
 
-  def realDups = (config.mongoDb("people").count(MongoDBObject("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
+  def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
 
 trait CollectingActor[A] {

@@ -14,7 +14,7 @@ object DbSpec extends Specification {
   def reportToCsv(metrics: Metrics, time: Long)(implicit config: OverrideConfig) {
     val size = config.limit match {
       case Some(x) => x
-      case None => config.mongoDb("people").count
+      case None => config.source.count
     }
     val cores = config.cores.getOrElse(runtime.availableProcessors)
 

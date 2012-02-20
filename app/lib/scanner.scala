@@ -2,7 +2,7 @@ package afm
 
 
 trait Scanner extends ConfigProvider {
-  implicit val collector = new MongoDBCollector("candidates")
+  implicit val collector = config.collector
   def run: Metrics
 }
 

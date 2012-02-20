@@ -58,15 +58,13 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
 
 
 class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName: String)(implicit val config: Config) extends ParallelCollector[Seq[String]] {
-  val source = MongoConnection()("pace")("people")
-
   def run {
     run(config.limit)
   }
 
   def run(limit: Option[Int]) {
-    val totalRecords = source.count
-    val allDocs = source.find().sort(Map("n" -> 1)) map MongoUtils.toDocument
+    val totalRecords = config.source.count
+    val allDocs = config.source.documents("n")
 
     val limitedDocs = limit match {
       case Some(x) => allDocs.take(x)

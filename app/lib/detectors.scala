@@ -20,34 +20,30 @@ import au.com.bytecode.opencsv.CSVReader
 case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
 trait Detector {
-  val options = new MongoOptions()
-  options.connectionsPerHost = 40
-  val source = new MongoConnection(new Mongo("127.0.0.1", options))("pace")("people")
-
   def run: Metrics
 }
 
 class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector, implicit val config: Config) extends Detector {
   def run = {
-    val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
+    val rs = config.source.documents(key)
 
     val (docs, totalRecords) = config.limit match {
       case Some(x) => (rs.take(x), x)
-      case None => (rs, source.count.toInt)
+      case None => (rs, config.source.count.toInt)
     }
 
     config.duplicateDetector.windowedDetect(docs, collector, config.windowSize, totalRecords=Some(totalRecords))
   }
 }
 
-class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None)(implicit config: Config) extends Detector {
+class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None)(implicit val config: Config) extends Detector {
   def run = {
-    val collector = new MongoDBCollector("candidates")
+    val collector = config.collector
 
     for(i <- 0 to hashes)  {
       val key = "h%s".format(i)
 
-      val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
+      val rs = config.source.documents(key)
       config.duplicateDetector.windowedDetect(rs, collector, config.windowSize, totalRecords=totalRecords)
     }
 
@@ -67,8 +63,8 @@ class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = N
         val hash_id = line.split(":")
         val id = Integer.parseInt(hash_id(1))
 
-        source.findOne(Map("n" -> id)) match {
-          case Some(a) => MongoUtils.toDocument(a)
+        config.source.get(id) match {
+          case Some(a) => a
           case None => throw new Exception("cannot find id %s".format(id))
         }
       }
@@ -99,7 +95,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
         res
       }
 
-      def fetchPage = (source.find("n" $in fetchIds) map MongoUtils.toDocument).toList
+      def fetchPage = config.source.get(fetchIds).toList
 
       def fetchIds = (lines.take(pageSize) map getId).toSeq
 
@@ -134,7 +130,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
           for(page <- lines.grouped(6)) {
             val p = page
             pool.execute {
-              for (doc <- (source.find("n" $in page.map(getId)) map MongoUtils.toDocument))
+              for (doc <- config.source.get(page.map(getId)))
                 fifoCollector.collect(doc)
             }
           }
