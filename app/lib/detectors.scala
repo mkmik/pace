@@ -36,7 +36,7 @@ class MongoStreamDetector(val key: String)(implicit collector: MongoDBCollector,
       case None => (rs, source.count.toInt)
     }
 
-    new Duplicates().windowedDetect(docs, collector, config.windowSize, totalRecords=Some(totalRecords))
+    config.duplicateDetector.windowedDetect(docs, collector, config.windowSize, totalRecords=Some(totalRecords))
   }
 }
 
@@ -48,7 +48,7 @@ class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = 
       val key = "h%s".format(i)
 
       val rs = source.find().sort(Map(key -> 1)) map MongoUtils.toDocument
-      new Duplicates().windowedDetect(rs, collector, config.windowSize, totalRecords=totalRecords)
+      config.duplicateDetector.windowedDetect(rs, collector, config.windowSize, totalRecords=totalRecords)
     }
 
     Metrics(0.0, 0.0, 0)
@@ -74,7 +74,7 @@ class MongoExternallySorted(val file: String, val totalRecords: Option[Long] = N
       }
     }
 
-    new Duplicates().windowedDetect(new RandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
+    config.duplicateDetector.windowedDetect(new RandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
   }
 }
 
@@ -106,7 +106,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
       def getId(line: String) = Integer.parseInt(line.split(":")(1))
     }
 
-    new Duplicates().windowedDetect(new PrefetchingRandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
+    config.duplicateDetector.windowedDetect(new PrefetchingRandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
   }
 }
 
@@ -144,7 +144,7 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
       fifoCollector.q.close
     }
 
-    new Duplicates().windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
+    config.duplicateDetector.windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
   }
 
 }
@@ -197,7 +197,7 @@ class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Lo
       fifoCollector.q.close
     }
 
-    new Duplicates().windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
+    config.duplicateDetector.windowedDetect(fifoCollector.q.toIterator, collector, config.windowSize, totalRecords=totalRecords)
   }
 
 }

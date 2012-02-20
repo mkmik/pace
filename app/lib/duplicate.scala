@@ -143,8 +143,40 @@ trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
   }
 }
 
-class Duplicates(implicit val config: Config) extends ParallelCollector[Duplicate] {
+trait Duplicates extends ParallelCollector[Duplicate] {
 
+  def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
+                     windowSize: Int = config.windowSize, totalRecords: Option[Long] = None): Metrics
+
+  def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
+    for (r <- window) {
+      if (pivot.identifier != r.identifier) {
+        val d = DistanceAlgo.distance(pivot, r)
+        if (d > config.threshold)
+          collectorActor ! Duplicate(d, pivot, r)
+      }
+    }
+  }
+
+  def report(collector: MongoDBCollector) = {
+    val precision = collector.precision
+    val recall = collector.recall
+    val dups = collector.dups
+
+    println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
+    println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
+    println("THREADS %s".format(threads))
+    println("FOUND DUPS %s".format(dups))
+    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
+    println("TRUE POSITIVES %s".format(collector.truePositives))
+    println("PRECISION %s".format(precision))
+    println("RECALL %s".format(recall))
+
+    Metrics(precision, recall, dups)
+  }
+}
+
+class SortedNeighborhood(implicit val config: Config) extends Duplicates {
   def windowedDetect(allDocs: Iterator[Document], collector: MongoDBCollector,
                      windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {
 
@@ -165,32 +197,27 @@ class Duplicates(implicit val config: Config) extends ParallelCollector[Duplicat
     report(collector)
   }
 
-  def report(collector: MongoDBCollector) = {
-    val precision = collector.precision
-    val recall = collector.recall
-    val dups = collector.dups
+  def enqueue(q: Queue[Document], v: Document, windowSize: Int) = (if(q.length >= windowSize) q.tail else q).enqueue(v)
+}
 
-    println("DONE, CANDIDATES RETURNED BY COLLECTOR %s, IN DB %s".format(collector.dups, collector.coll.count(MongoDBObject())))
-    println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
-    println("THREADS %s".format(threads))
-    println("FOUND DUPS %s".format(dups))
-    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
-    println("TRUE POSITIVES %s".format(collector.truePositives))
-    println("PRECISION %s".format(precision))
-    println("RECALL %s".format(recall))
 
-    Metrics(precision, recall, dups)
-  }
+class Blocking(implicit config: Config) extends SortedNeighborhood {
+  override def enqueue(q: Queue[Document], v: Document, windowSize: Int) = {
 
-  def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
-    for (r <- window) {
-      if (pivot.identifier != r.identifier) {
-        val d = DistanceAlgo.distance(pivot, r)
-        if (d > config.threshold)
-          collectorActor ! Duplicate(d, pivot, r)
+    val blocking = new FieldFeatureExtractor(StringFieldDef("lastName", NullDistanceAlgo())) with ValueExtractor[String] {
+      def extractValue(field: Field)(implicit config: Config): Seq[String] = {
+        field match {
+          case StringField(value) => List(value.take(config.blockingPrefix))
+          case _ => throw new Exception("unsupported field type")
+        }
       }
     }
-  }
 
-  def enqueue[A] (q: Queue[A], v: A, windowSize: Int) = (if(q.length >= windowSize) q.tail else q).enqueue(v)
+    val matchesPrev = q.isEmpty || blocking.extract(q.head).head == blocking.extract(v).head
+
+    if(matchesPrev)
+      q.enqueue(v)
+    else
+      Queue()
+  }
 }

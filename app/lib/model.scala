@@ -67,6 +67,9 @@ trait Config {
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
   def scanner: Scanner = new SingleFieldScanner
+  def duplicateDetector: Duplicates = new SortedNeighborhood
+
+  def blockingPrefix = 4
 
   def progressStep = 1000
   def threadPoolBoost = 4
@@ -101,6 +104,14 @@ trait OverrideConfig extends Config {
     case Some("ngram") => new NgramScanner
     case None => super.scanner
   }
+
+  override def duplicateDetector = conf.getString("pace.detector") match {
+    case Some("sortedNeighborhood") => new SortedNeighborhood
+    case Some("blocking") => new Blocking
+    case None => super.duplicateDetector
+  }
+
+  override def blockingPrefix = conf.getInt("pace.blocking.prefix").getOrElse(super.blockingPrefix)
 
   override def progressStep = conf.getInt("pace.progress.step").getOrElse(super.progressStep)
   override def threadPoolBoost = conf.getInt("pace.threadPoolBoost").getOrElse(super.threadPoolBoost)
@@ -142,4 +153,3 @@ trait ConfigurableModel extends OverrideConfig {
     }
   }
 }
-
