@@ -29,6 +29,7 @@ trait GenericCollector[A] {
 trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
   var truePositives = 0
   var dups = 0
+  var seen: Set[String] = Set()
 
   def precision = truePositives.asInstanceOf[Double] / dups
   def recall = truePositives.asInstanceOf[Double] / realDups
@@ -39,18 +40,8 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
     case Some(l) => l.toDouble / config.source.count.toDouble
     case None => 1.0
   }
-}
 
-class PrintingCollector(implicit val config: Config) extends Collector {
-  def collect(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
-  def realDups = 0
-}
-
-class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
-  coll.drop()
-  coll.ensureIndex(MongoDBObject("d" -> 1))
-
-  var seen: Set[String] = Set()
+  def append(dup: Duplicate)
 
   def collect(dup: Duplicate) {
     val max = List(dup.a.identifier.toString, dup.b.identifier.toString).max
@@ -58,13 +49,26 @@ class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) e
     val seenKey = "%s%s".format(max, min)
 
     if (!(seen contains seenKey)) {
-      coll += dup.toMongo
+      append(dup)
       dups += 1
       if(dup.check)
         truePositives += 1
       seen = seen + seenKey
     }
   }
+
+}
+
+class PrintingCollector(implicit val config: Config) extends Collector {
+  def append(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
+  def realDups = 0
+}
+
+class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
+  coll.drop()
+  coll.ensureIndex(MongoDBObject("d" -> 1))
+
+  def append(dup: Duplicate) = coll += dup.toMongo
 
   def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
