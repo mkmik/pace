@@ -1,4 +1,4 @@
-package afm
+package afm.duplicates
 
 import scala.collection.immutable.Map
 import scala.collection.immutable.Queue
@@ -13,6 +13,15 @@ import scala.sys.runtime
 
 import com.mongodb.casbah.Imports._
 
+import afm._
+import afm.model._
+import afm.io._
+import afm.util._
+import afm.feature._
+import afm.distance._
+
+
+case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
 case class Duplicate(val d: Double, val a: Document, val b: Document) {
   def id = {
@@ -21,10 +30,6 @@ case class Duplicate(val d: Double, val a: Document, val b: Document) {
   }
 
   def check = a.realIdentifier == b.realIdentifier
-}
-
-trait GenericCollector[A] {
-  def collect(dup: A)
 }
 
 trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
@@ -60,79 +65,6 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
 class PrintingCollector(implicit val config: Config) extends Collector {
   def append(dup: Duplicate) = println("DISTANCE %s".format(dup.d))
   def realDups = 0
-}
-
-trait CollectingActor[A] {
-  case class Stop
-
-  def makeCollectorActor(collector: GenericCollector[A]): Actor = actor {
-    var n = 0
-    loop {
-      react {
-        case Stop => {
-          reply(n)
-          exit('stop)
-        }
-        case dup: A => {
-          n += 1
-          collector.collect(dup)
-        }
-      }
-    }
-  }
-}
-
-trait BlockingCollectingActor[A] extends CollectingActor[A] {
-  override def makeCollectorActor(collector: GenericCollector[A]): Actor = actor {
-    var n = 0
-    loop {
-      react {
-        case Stop => {
-          reply(n)
-          exit('stop)
-        }
-        case dup: A => {
-          n += 1
-          collector.collect(dup)
-          reply(true)
-        }
-      }
-    }
-  }
-}
-
-trait ConfigProvider {
-  implicit val config: Config
-}
-
-trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
-  val cpus = runtime.availableProcessors
-
-  def threads = config.cores.getOrElse(cpus) * boost
-  def boost = config.threadPoolBoost
-
-  def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
-                                                        new LinkedBlockingQueue(0 + 8 * threads),
-                                                        Executors.defaultThreadFactory,
-                                                        new ThreadPoolExecutor.CallerRunsPolicy()
-                                                      )
-
-  def runWithCollector[B](collector: GenericCollector[A])(body: (ExecutorScheduler, Actor) => B): B = {
-    val executor = makeExecutor
-    val pool = ExecutorScheduler(executor)
-    val collectorActor = makeCollectorActor(collector)
-
-    try {
-      body(pool, collectorActor)
-    } finally {
-      println("Waiting for executor")
-      pool.shutdown()
-      executor.awaitTermination(10, TimeUnit.MINUTES)
-      val res = collectorActor !? Stop
-      println("Executor finished")
-      res
-    }
-  }
 }
 
 trait Duplicates extends ParallelCollector[Duplicate] {

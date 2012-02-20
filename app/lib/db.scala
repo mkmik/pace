@@ -1,8 +1,10 @@
 package afm
 
 import com.twitter.querulous.evaluator.QueryEvaluator
-
 import java.sql.ResultSet
+
+import afm.model._
+
 
 //val rs = queryEvaluator.select("select * from results_view") { row => row.getArray("dc_creator").getArray.asInstanceOf[Array[String]](0)}.first.split("§§§")(1)
 

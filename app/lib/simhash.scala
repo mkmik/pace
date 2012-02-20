@@ -1,8 +1,8 @@
-package afm
+package afm.distance
 
 import scala.collection.mutable._
 import scala.math.min
-import BitSetUtils._
+import afm.util.BitSetUtils._
 
 
 trait Simhash {

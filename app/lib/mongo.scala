@@ -1,7 +1,19 @@
-package afm
+package afm.mongo
 
+import afm._
+import afm.io._
+import afm.model._
+import afm.duplicates._
 import com.mongodb.casbah.Imports._
 
+
+class MongoDBSource(val collection: MongoCollection)(implicit config: Config) extends Source {
+  def documents(sortKey: String) = collection.find().sort(Map(sortKey -> 1)) map MongoUtils.toDocument
+  def get[A](id: A) = collection.findOne(Map("n" -> id)) map MongoUtils.toDocument
+  def get[A](ids: Seq[A]) = collection.find("n" $in ids) map MongoUtils.toDocument
+  def count = collection.count
+  def count(query: Map[String, Any]) = collection.count(query)
+}
 
 class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {
   import MongoUtils._

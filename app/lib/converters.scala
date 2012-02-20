@@ -1,5 +1,7 @@
 package afm
 
+import afm.model._
+
 
 object JsonUtils {
   def toDocument(rs: Map[String, Any])(implicit config: Config) = new Document(Map(

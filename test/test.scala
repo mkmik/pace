@@ -2,11 +2,16 @@ package test
 
 import org.specs2.mutable._
 
-import afm._
-import afm.Watch._
 import resource._
 import java.io._
 import scala.sys.runtime
+
+import afm._
+import afm.util.Watch._
+import afm.model._
+import afm.mongo._
+import afm.feature._
+import afm.duplicates._
 
 
 object DbSpec extends Specification {

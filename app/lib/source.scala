@@ -1,8 +1,10 @@
-package afm
+package afm.io
 
 import com.mongodb.casbah.Imports._
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+
+import afm.model._
 
 
 trait Source {
@@ -11,12 +13,4 @@ trait Source {
   def get[A](ids: Seq[A]): Iterator[Document]
   def count: Long
   def count(query: Map[String, Any]): Long
-}
-
-class MongoDBSource(val collection: MongoCollection)(implicit config: Config) extends Source {
-  def documents(sortKey: String) = collection.find().sort(Map(sortKey -> 1)) map MongoUtils.toDocument
-  def get[A](id: A) = collection.findOne(Map("n" -> id)) map MongoUtils.toDocument
-  def get[A](ids: Seq[A]) = collection.find("n" $in ids) map MongoUtils.toDocument
-  def count = collection.count
-  def count(query: Map[String, Any]) = collection.count(query)
 }

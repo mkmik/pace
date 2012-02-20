@@ -1,9 +1,16 @@
-package afm
+package afm.feature
 
 import com.mongodb.casbah.Imports._
 import java.io._
 import resource._
 import scala.math.round
+
+import afm._
+import afm.model._
+import afm.io._
+import afm.util._
+import afm.duplicates._
+import afm.distance._
 
 
 trait FeatureExtractor[A] extends ConfigProvider {

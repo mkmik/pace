@@ -1,6 +1,9 @@
-package afm
+package afm.detectors
 
 import afm._
+import afm.model._
+import afm.io._
+import afm.duplicates._
 import afm.DbUtils._
 
 import com.mongodb.casbah.Imports._
@@ -16,8 +19,6 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import au.com.bytecode.opencsv.CSVReader
 
-
-case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
 trait Detector {
   def run: Metrics

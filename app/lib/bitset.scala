@@ -1,4 +1,4 @@
-package afm
+package afm.util
 
 import scala.collection.mutable.BitSet
 

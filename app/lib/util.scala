@@ -1,8 +1,10 @@
-package afm
+package afm.util
 
 import scala.math.round
 import org.scala_tools.time.Imports._
 import org.joda.time.format.PeriodFormatterBuilder
+
+import afm._
 
 
 class ProgressReportingIterator[A](val iterator: Iterator[A], val label: String = "", val totalRecords: Option[Long] = None)(implicit config: Config) extends Iterator[A] {

@@ -1,4 +1,4 @@
-package afm
+package afm.util
 
 object Watch {
   def timed[A](caption: String)(body: => A) = {

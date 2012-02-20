@@ -1,6 +1,9 @@
-package afm
+package afm.distance
 
 import scala.math._
+
+import afm._
+import afm.model._
 
 
 abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) {
