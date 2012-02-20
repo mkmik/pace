@@ -6,7 +6,25 @@ import afm._
 import afm.model._
 
 
-abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) {
+/*! Each field is configured with a distance algo which knows how to compute
+ * the distance (0-1) between the fields of two objects. */
+trait DistanceAlgo {
+  val weight: Double
+
+  def distance[A](a: Field[A], b: Field[A]): Double
+}
+
+/*! Not all fields of a document need to partecipate in the distance measure.
+ * We model those fields as having a NullDistanceAlgo. */
+case class NullDistanceAlgo() extends DistanceAlgo {
+  val weight = 0.0
+  def distance[A](a: Field[A], b: Field[A]): Double = 0.0
+}
+
+
+/*! For the rest of the fields delegate the distance measure to the second string library
+ */
+abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) extends DistanceAlgo {
   def concat(l: List[String]) = l.reduceLeft(_ + " " + _)
 
   def distance(a: String, b: String): Double = ssalgo.score(a, b)
@@ -19,6 +37,8 @@ abstract class DistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.Abstra
   }
 }
 
+/*! The distance between two documents is given by the weighted mean of the field distances
+ */
 object DistanceAlgo {
   def distance(a: Document, b: Document)(implicit config: Config) = {
     val w = config.fields.map(_.algo.weight).reduceLeft(_ + _)
@@ -29,13 +49,13 @@ object DistanceAlgo {
   }
 }
 
+/*! Then we just have to define concrete instances based on second string
+ */
+case class JaroWinkler(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.JaroWinkler())
 
-case class Levenstein(w: Double) extends DistanceAlgo(w, new com.wcohen.ss.Levenstein()) {
+/*! Some second string distance algorithms don't return the value in the correct range, so we need to normalize it.
+ */
+case class Levenstein(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.Levenstein()) {
   override def distance(a: String, b: String) = 1/pow((abs(super.distance(a, b)) + 1), 0.1)
 }
 
-case class JaroWinkler(w: Double) extends DistanceAlgo(w, new com.wcohen.ss.JaroWinkler())
-
-case class NullDistanceAlgo() extends DistanceAlgo(0, null) {
-  override def distance(a: String, b: String): Double = 0.0
-}
