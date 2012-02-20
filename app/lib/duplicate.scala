@@ -15,6 +15,11 @@ import com.mongodb.casbah.Imports._
 
 
 case class Duplicate(val d: Double, val a: Document, val b: Document) {
+  def id = {
+    val ids = List(a.identifier, b.identifier)
+    "%s-%s".format(ids.max, ids.min)
+  }
+
   def check = a.realIdentifier == b.realIdentifier
 }
 
@@ -40,16 +45,13 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
   def append(dup: Duplicate)
 
   def collect(dup: Duplicate) {
-    val max = List(dup.a.identifier.toString, dup.b.identifier.toString).max
-    val min = List(dup.a.identifier.toString, dup.b.identifier.toString).min
-    val seenKey = "%s%s".format(max, min)
-
-    if (!(seen contains seenKey)) {
+    val dupId = dup.id
+    if (!(seen contains dupId)) {
       append(dup)
       dups += 1
       if(dup.check)
         truePositives += 1
-      seen = seen + seenKey
+      seen = seen + dupId
     }
   }
 
