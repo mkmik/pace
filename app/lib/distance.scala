@@ -15,7 +15,7 @@ trait DistanceAlgo {
 }
 
 /*! Not all fields of a document need to partecipate in the distance measure.
- * We model those fields as having a NullDistanceAlgo. */
+ We model those fields as having a NullDistanceAlgo. */
 case class NullDistanceAlgo() extends DistanceAlgo {
   val weight = 0.0
   def distance[A](a: Field[A], b: Field[A]): Double = 0.0
