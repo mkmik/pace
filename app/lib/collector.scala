@@ -55,6 +55,8 @@ trait BlockingCollectingActor[A] extends CollectingActor[A] {
 }
 
 trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
+  implicit val ec = afm.io.ParallelCollector.ec
+
   val cpus = runtime.availableProcessors
 
   def threads = config.cores.getOrElse(cpus) * boost
@@ -82,4 +84,11 @@ trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
       res
     }
   }
+}
+
+object ParallelCollector {
+  import akka.dispatch._
+  import java.util.concurrent.Executors
+  implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
+
 }

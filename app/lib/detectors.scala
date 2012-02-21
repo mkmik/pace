@@ -20,6 +20,8 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import au.com.bytecode.opencsv.CSVReader
 
+import akka.dispatch.Future
+
 
 trait Detector {
   def run: Metrics
@@ -122,8 +124,6 @@ class ParalellFetchMongoExternallySorted(val file: String, val totalRecords: Opt
       def collect(doc: Document) = q.enqueue(doc)
     }
 
-    import akka.dispatch.Future
-
     val fifoWorker = Future {
       runWithCollector(fifoCollector) {
         def getId(line: String) = Integer.parseInt(line.split(":")(1))
@@ -160,8 +160,6 @@ class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Lo
 
       def collect(doc: Document) = q.enqueue(doc)
     }
-
-    import akka.dispatch.Future
 
     val fifoWorker = Future {
       runWithCollector(fifoCollector) {
