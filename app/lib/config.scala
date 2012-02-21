@@ -14,7 +14,7 @@ import afm.duplicates._
 
 
 object OptionalConfigFactory {
-  def load(fileName: String) = new OptionalConfig(ConfigFactory.load(fileName))
+  def load(fileName: String) = new OptionalConfig(ConfigFactory.parseFile(new java.io.File(fileName)))
 }
 
 
