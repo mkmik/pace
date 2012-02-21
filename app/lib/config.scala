@@ -120,7 +120,7 @@ trait ConfigurableModel extends OverrideConfig {
 
     conf.getObject("pace.model") match {
       case Some(model) => {
-        def parseField(name: String, cfg: ConfigValue) = {
+        def parseField(name: String) = {
           val weight = conf.getDouble("pace.model.%s.weight".format(name)).getOrElse(1.0)
 
           val algo = conf.getString("pace.model.%s.algo".format(name)) match {
@@ -139,9 +139,7 @@ trait ConfigurableModel extends OverrideConfig {
           field(name, algo(weight))
         }
 
-        val res = for(name <- model.keySet)
-                  yield parseField(name, model.get(name))
-        res.toList
+        model.keySet.map(parseField).toList
       }
       case None => List()
     }
