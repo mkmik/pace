@@ -171,8 +171,7 @@ class CmdlineMongoExternallySorted(val file: String, val totalRecords: Option[Lo
           for(page <- lines.grouped(2000)) {
             val p = page
             pool.execute {
-
-              val q = "{n: {$in: [%s]}}".format((for(l <- page) yield getId(l).toString).reduceLeft(_ + "," + _))
+              val q = "{n: {$in: [%s]}}".format(page.map(getId).mkString(","))
 
               import scala.sys.process._
 

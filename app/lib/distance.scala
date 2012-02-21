@@ -25,7 +25,7 @@ case class NullDistanceAlgo() extends DistanceAlgo {
 /*! For the rest of the fields delegate the distance measure to the second string library
  */
 abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) extends DistanceAlgo {
-  def concat(l: List[String]) = l.reduceLeft(_ + " " + _)
+  def concat(l: List[String]) = l.mkString(" ")
 
   def distance(a: String, b: String): Double = ssalgo.score(a, b)
   def distance(a: List[String], b: List[String]): Double = distance(concat(a), concat(b))
@@ -41,11 +41,11 @@ abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcoh
  */
 object DistanceAlgo {
   def distance(a: Document, b: Document)(implicit config: Config) = {
-    val w = config.fields.map(_.algo.weight).reduceLeft(_ + _)
+    val w = config.fields.map(_.algo.weight).sum
     (for(i <- config.fields)
      yield (if (i.algo.weight == 0) 0
             else
-              i.algo.weight * i.algo.distance(a(i.name).get, b(i.name).get))).reduceLeft(_ + _) / w
+              i.algo.weight * i.algo.distance(a(i.name).get, b(i.name).get))).sum / w
   }
 }
 
