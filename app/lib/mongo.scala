@@ -7,12 +7,16 @@ import afm.duplicates._
 import com.mongodb.casbah.Imports._
 
 
-class MongoDBSource(val collection: MongoCollection)(implicit config: Config) extends Source {
-  def documents(sortKey: String) = collection.find().sort(Map(sortKey -> 1)) map MongoUtils.toDocument
+class MongoDBSource(val collection: MongoCollection, val adapter: Adapter[DBObject])(implicit config: Config) extends Source {
+  def documents(sortKey: String) = collection.find().sort(Map(sortKey -> 1)) map adapter.toDocument
   def get[A](id: A) = collection.findOne(Map("n" -> id)) map MongoUtils.toDocument
   def get[A](ids: Seq[A]) = collection.find("n" $in ids) map MongoUtils.toDocument
   def count = collection.count
   def count(query: Map[String, Any]) = collection.count(query)
+}
+
+class BSONAdapter(implicit config: Config) extends Adapter[DBObject] {
+  def toDocument(record: DBObject): Document = MongoUtils.toDocument(record)
 }
 
 class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) extends Collector {

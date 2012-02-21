@@ -14,3 +14,7 @@ trait Source {
   def count: Long
   def count(query: Map[String, Any]): Long
 }
+
+trait Adapter[A] {
+  def toDocument(record: A): Document
+}

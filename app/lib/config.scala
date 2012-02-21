@@ -49,7 +49,7 @@ trait Config {
   def threshold = 0.90
 
   private val mongoDb = MongoConnection()("pace")
-  val source = new MongoDBSource(mongoDb("people"))
+  val source = new MongoDBSource(mongoDb("people"), new BSONAdapter)
   def collector: Collector = new MongoDBCollector(mongoDb("candidates"))
 
   def sortOn = "n"
