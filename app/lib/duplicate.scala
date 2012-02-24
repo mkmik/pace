@@ -24,9 +24,16 @@ import afm.distance._
 case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
 case class Duplicate(val d: Double, val a: Document, val b: Document) {
-  def id = {
-    val ids = List(a.identifier, b.identifier)
-    "%s-%s".format(ids.max, ids.min)
+
+  def id: String = (a.identifier, b.identifier) match {
+    case (xa: Int, xb: Int) => {
+      val ids = List(xa, xb)
+      "%s-%s".format(ids.max, ids.min)
+    }
+    case (xa: String, xb: String) => {
+      val ids = List(xa, xb)
+      "%s-%s".format(ids.max, ids.min)
+    }
   }
 
   def check = a.realIdentifier == b.realIdentifier

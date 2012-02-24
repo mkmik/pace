@@ -11,7 +11,7 @@ import afm.mongo._
 import afm.scanner._
 import afm.distance._
 import afm.duplicates._
-
+import afm.dnet._
 
 object OptionalConfigFactory {
   def load(fileName: String) = new OptionalConfig(ConfigFactory.parseFile(new java.io.File(fileName)))
@@ -48,11 +48,14 @@ trait Config {
   def windowSize = 10
   def threshold = 0.90
 
+//  private val mongoDb = MongoConnection()("driver_small")
+//  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
   private val mongoDb = MongoConnection()("pace")
   val source = new MongoDBSource(mongoDb("people"), new BSONAdapter)
   def collector: Collector = new MongoDBCollector(mongoDb("candidates"))
 
-  def sortOn = "n"
+  def sortOn = identifierField
+  def identifierField = "n"
 
   def ngramSize = 3
   def maxNgrams = 4
@@ -78,6 +81,7 @@ trait OverrideConfig extends Config {
   override def threshold = conf.getDouble("pace.threshold").getOrElse(super.threshold)
 
   override def sortOn = conf.getString("pace.sortOn").getOrElse(super.sortOn)
+  override def identifierField = conf.getString("pace.identifierField").getOrElse(super.identifierField)
 
   override def ngramSize = conf.getInt("pace.ngramSize").getOrElse(super.ngramSize)
   override def maxNgrams = conf.getInt("pace.maxNgrams").getOrElse(super.maxNgrams)

@@ -18,8 +18,8 @@ trait Document {
   def fields: Iterable[(String, Field[Any])]
   def apply[A](name: String): Option[Field[A]]
 
-  def identifier: Int
-  def realIdentifier: Int
+  def identifier: Any
+  def realIdentifier: Any
 }
 
 /*!
@@ -43,7 +43,7 @@ case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[F
 
 
 /*! A concrete implementation of a document is done by keeping a map of string->fields */
-class MapDocument (val fieldMap: Map[String, Field[Any]]) extends Document {
+class MapDocument (val fieldMap: Map[String, Field[Any]])(implicit config: Config) extends Document {
   def fields = fieldMap.toIterable
 
   def apply[A](name: String): Option[Field[A]] = {
@@ -55,7 +55,7 @@ class MapDocument (val fieldMap: Map[String, Field[Any]]) extends Document {
 
   override def toString = "Document(%s)".format(fieldMap)
 
-  def identifier = apply[Int]("n").get.value
-  def realIdentifier = if (apply[String]("kind").get.value == "unique") identifier else apply[Int]("relatedTo").get.value
+  def identifier = apply[Any](config.identifierField).get.value
+  def realIdentifier = if (apply[String]("kind").get.value == "unique") identifier else apply[Any]("relatedTo").get.value
 }
 
