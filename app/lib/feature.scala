@@ -24,13 +24,16 @@ trait ValueExtractor[A] {
 class FieldFeatureExtractor[A](val field: FieldDef[A])(implicit val config: Config) extends FeatureExtractor[A] {
   self: ValueExtractor[A] =>
 
-  def extract(doc: Document): Seq[A] = extractValue(doc(field.name).get)
+  def extract(doc: Document): Seq[A] = extractValue(doc(field.name) match {
+    case Some(f) => f
+    case None => throw new Exception("Cannot get field %s".format(field.name))
+  })
 }
 
 trait NGramValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
     field match {
-      case StringField(value) => value.sliding(config.ngramSize).take(config.maxNgrams).toSeq
+      case StringField(value) => value.sliding(config.ngramSize).take(config.maxNgrams).map(_.replace(":","_")).toSeq
       case _ => throw new Exception("unsupported field type")
     }
   }

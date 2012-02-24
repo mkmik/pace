@@ -103,7 +103,7 @@ class PrefetchingMongoExternallySorted(val file: String, val totalRecords: Optio
 
       def fetchIds = (lines.take(pageSize) map getId).toSeq
 
-      def getId(line: String) = Integer.parseInt(line.split(":")(1))
+      def getId(line: String) = Integer.parseInt(line.split(":", 2)(1))
     }
 
     config.duplicateDetector.windowedDetect(new PrefetchingRandomAccessIterator(), collector, config.windowSize, totalRecords=totalRecords)
