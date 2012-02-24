@@ -12,6 +12,7 @@ import afm.scanner._
 import afm.distance._
 import afm.duplicates._
 import afm.dnet._
+import afm.io._
 
 object OptionalConfigFactory {
   def load(fileName: String) = new OptionalConfig(ConfigFactory.parseFile(new java.io.File(fileName)))
@@ -47,8 +48,10 @@ trait Config {
 //  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
 
   private lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
-  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), new BSONAdapter)
+  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
   def collector: Collector = new MongoDBCollector(mongoDb(mongoCandidatesCollection))
+
+  def mongoAdapter: Adapter[DBObject] = new BSONAdapter
 
   def mongoHostname = "localhost"
   def mongoDbName = "pace"
@@ -85,7 +88,11 @@ trait OverrideConfig extends Config {
   override def mongoDbName = conf.getString("pace.mongo.dbName").getOrElse(super.mongoDbName)
   override def mongoSourceCollection = conf.getString("pace.mongo.sourceCollection").get // OrElse(super.mongoSourceCollection)
   override def mongoCandidatesCollection = conf.getString("pace.mongo.candidatesCollection").getOrElse(super.mongoCandidatesCollection)
-
+  override def mongoAdapter = conf.getString("pace.mongo.adapter") match {
+    case Some("attributes") => new BSONAdapter
+    case Some("dnet") => new DNetMongoDBAdapter
+    case None => super.mongoAdapter
+  }
 
   override def cores = conf.getInt("pace.cores")
   override def limit = conf.getInt("pace.limit")
