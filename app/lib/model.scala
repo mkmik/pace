@@ -56,6 +56,12 @@ class MapDocument (val fieldMap: Map[String, Field[Any]])(implicit config: Confi
   override def toString = "Document(%s)".format(fieldMap)
 
   def identifier = apply[Any](config.identifierField).get.value
-  def realIdentifier = if (apply[String]("kind").get.value == "unique") identifier else apply[Any]("relatedTo").get.value
+
+  def realIdentifier = apply[String]("kind") match {
+    case Some(StringField("unique")) => identifier
+    case Some(_) => apply[Any]("relatedTo").get.value
+    case None => ""
+  }
+
 }
 
