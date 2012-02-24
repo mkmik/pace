@@ -4,14 +4,15 @@ import afm._
 import afm.io._
 import afm.model._
 import afm.mongo._
-import scala.xml.{Elem, Node}
+import scala.xml.{XML, Elem, Node}
 import com.mongodb.casbah.Imports._
 
 
 class DNetMongoDBAdapter(implicit config: Config) extends Adapter[DBObject] {
   val xmlAdapter = new XmlAdapter
 
-  def toDocument(record: DBObject): Document = xmlAdapter.toDocument(record.getAs[Elem]("body").get)
+  def toDocument(record: DBObject): Document = xmlAdapter.toDocument(toElem(record.getAs[String]("body").get))
+  def toElem(xml: String): Elem = {XML.loadString(xml)}
 }
 
 class XmlAdapter(implicit config: Config) extends Adapter[Elem] {
