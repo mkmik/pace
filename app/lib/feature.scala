@@ -68,7 +68,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
 
   def run(limit: Option[Int]) {
     val totalRecords = config.source.count
-    val allDocs = config.source.documents("n")
+    val allDocs = config.source.documents(config.identifierField)
 
     val limitedDocs = limit match {
       case Some(x) => allDocs.take(x)
@@ -88,7 +88,7 @@ class MongoFeatureExtractor[A](val extractor: FeatureExtractor[A], val fileName:
             pool execute {
               collectorActor ! (for(doc <- page;
                                     f <- extractor.extract(doc))
-                                yield "%s:%s".format(f.toString.trim, doc[Int]("n").get.value))
+                                yield "%s:%s".format(f.toString.trim, doc.identifier))
             }
           }
       }
