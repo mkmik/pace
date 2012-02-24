@@ -26,12 +26,23 @@ trait Document {
  The schema is composed by field definitions (FieldDef). Each field has a type,
  a name, and an associated distance algorithm
  */
-sealed abstract class FieldDef[A](val name: String, val algo: DistanceAlgo)
+sealed abstract class FieldDef[A](val name: String, val algo: DistanceAlgo) {
+  def apply(s: String): Field[A]
+}
 
 /*! We currently handle only basic field types (int, string and list of strings) */
-case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef[Int](n, d)
-case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n, d)
-case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d)
+case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef[Int](n, d) {
+  def apply(s: String) = IntField(Integer.parseInt(s))
+}
+
+case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n, d) {
+  def apply(s: String) = StringField(s)
+}
+
+case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d) {
+  def apply(s: String) = throw new Exception("Not implemented yet")
+}
+
 
 /*! Each concrete document is built of field values */
 sealed abstract class Field[+A](val value: A)

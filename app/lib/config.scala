@@ -40,6 +40,7 @@ trait ConfigProvider {
  */
 trait Config {
   val fields: List[FieldDef[_]]
+  val identifierFieldDef: FieldDef[_]
 
   /*! Some of the object we construct here might need this configuration instance */
   implicit val me: Config = this
@@ -168,4 +169,6 @@ trait ConfigurableModel extends OverrideConfig {
       case None => List()
     }
   }
+
+  override val identifierFieldDef = new StringFieldDef(identifierField, NullDistanceAlgo())
 }
