@@ -39,6 +39,18 @@ trait NGramValueExtractor extends ValueExtractor[String] {
   }
 }
 
+trait TokenizedNGramValueExtractor extends ValueExtractor[String] {
+  def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
+    def tokenize(v: String) = v.split(" ")
+    field match {
+      case StringField(value) => (for(token: String <- tokenize(value).toSet;
+				     ngram <- token.sliding(config.ngramSize).take(config.maxNgrams))
+	yield ngram.replace(":","_")).toSeq
+      case _ => throw new Exception("unsupported field type")
+    }
+  }
+}
+
 
 trait RotatedSimhashValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {

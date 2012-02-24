@@ -41,7 +41,8 @@ trait FeaturedScanner {
 
 class NgramScanner(implicit val config: Config) extends Scanner with FeaturedScanner {
   def run = {
-    val features = new FieldFeatureExtractor(StringFieldDef(config.compareOn, NullDistanceAlgo())) with NGramValueExtractor
+    //val features = new FieldFeatureExtractor(StringFieldDef(config.compareOn, NullDistanceAlgo())) with NGramValueExtractor
+    val features = new FieldFeatureExtractor(StringFieldDef(config.compareOn, NullDistanceAlgo())) with TokenizedNGramValueExtractor
     multiPass("/tmp/ngrams.txt", "/tmp/ngrams.sorted", features)
   }
 }
