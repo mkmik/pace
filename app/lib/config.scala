@@ -43,16 +43,22 @@ trait Config {
   /*! Some of the object we construct here might need this configuration instance */
   implicit val me: Config = this
 
+//  private val mongoDb = MongoConnection()("driver_small")
+//  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
+
+  private lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
+  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), new BSONAdapter)
+  def collector: Collector = new MongoDBCollector(mongoDb(mongoCandidatesCollection))
+
+  def mongoHostname = "localhost"
+  def mongoDbName = "pace"
+  def mongoSourceCollection: String = "people"
+  def mongoCandidatesCollection = "candidate"
+
   def cores: Option[Int] = None
   def limit: Option[Int] = None
   def windowSize = 10
   def threshold = 0.90
-
-//  private val mongoDb = MongoConnection()("driver_small")
-//  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
-  private val mongoDb = MongoConnection()("pace")
-  val source = new MongoDBSource(mongoDb("people"), new BSONAdapter)
-  def collector: Collector = new MongoDBCollector(mongoDb("candidates"))
 
   def sortOn = identifierField
   def identifierField = "n"
@@ -74,6 +80,12 @@ trait Config {
 
 trait OverrideConfig extends Config {
   val conf = OptionalConfigFactory.load("conf/pace.conf")
+
+  override def mongoHostname = conf.getString("pace.mongo.hostName").getOrElse(super.mongoHostname)
+  override def mongoDbName = conf.getString("pace.mongo.dbName").getOrElse(super.mongoDbName)
+  override def mongoSourceCollection = conf.getString("pace.mongo.sourceCollection").get // OrElse(super.mongoSourceCollection)
+  override def mongoCandidatesCollection = conf.getString("pace.mongo.candidatesCollection").getOrElse(super.mongoCandidatesCollection)
+
 
   override def cores = conf.getInt("pace.cores")
   override def limit = conf.getInt("pace.limit")
