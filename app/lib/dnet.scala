@@ -28,8 +28,10 @@ class XmlAdapter(implicit config: Config) extends Adapter[Elem] {
   ))
 
   def select(node: Elem, name: String): String = {
-    val Array(ns, fieldName) = name.split("_")
-    (node \\ fieldName).filter({k: Node => k.prefix == ns}).text
+    name.split("_") match {
+      case Array(ns, fieldName) => (node \\ fieldName).filter({k: Node => k.prefix == ns}).text
+      case Array(fieldName) => (node \\ fieldName).text
+    }
   }
 
 }
