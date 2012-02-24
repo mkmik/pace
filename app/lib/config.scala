@@ -64,6 +64,7 @@ trait Config {
   def threshold = 0.90
 
   def sortOn = identifierField
+  def compareOn = sortOn
   def identifierField = "n"
 
   def ngramSize = 3
@@ -100,11 +101,11 @@ trait OverrideConfig extends Config {
   override def threshold = conf.getDouble("pace.threshold").getOrElse(super.threshold)
 
   override def sortOn = conf.getString("pace.sortOn").getOrElse(super.sortOn)
+  override def compareOn = conf.getString("pace.compareOn").getOrElse(super.compareOn)
   override def identifierField = conf.getString("pace.identifierField").getOrElse(super.identifierField)
 
   override def ngramSize = conf.getInt("pace.ngramSize").getOrElse(super.ngramSize)
   override def maxNgrams = conf.getInt("pace.maxNgrams").getOrElse(super.maxNgrams)
-
 
   override def simhashRotationStep = conf.getInt("pace.simhashRotationStep").getOrElse(super.simhashRotationStep)
   override def simhashAlgo = conf.getString("pace.simhash.algo") match {
