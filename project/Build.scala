@@ -24,7 +24,9 @@ object ApplicationBuild extends Build {
 
       "net.sf.opencsv" % "opencsv" % "2.1",
 
-      "com.typesafe.config" % "config" % "0.2.1"
+      "com.typesafe.config" % "config" % "0.2.1",
+
+      "com.typesafe.akka" % "akka-remote" % "2.0"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
