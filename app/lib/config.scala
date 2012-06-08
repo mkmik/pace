@@ -27,6 +27,7 @@ class OptionalConfig(val conf: com.typesafe.config.Config) {
   def getString(implicit path: String) = safe(conf.getString)
   def getDouble(implicit path: String) = safe(conf.getDouble)
   def getObject(implicit path: String) = safe(conf.getObject)
+  def getBoolean(implicit path: String) = safe(conf.getBoolean)
 }
 
 
@@ -148,6 +149,7 @@ trait ConfigurableModel extends OverrideConfig {
       case Some(model) => {
         def parseField(name: String) = {
           val weight = conf.getDouble("pace.model.%s.weight".format(name)).getOrElse(1.0)
+          val ignoreMissing = conf.getBoolean("pace.model.%s.ignoreMissing".format(name)).getOrElse(false)
 
           val algo = conf.getString("pace.model.%s.algo".format(name)) match {
             case Some("JaroWinkler") => JaroWinkler(_)
@@ -157,12 +159,12 @@ trait ConfigurableModel extends OverrideConfig {
           }
 
           val field = conf.getString("pace.model.%s.type".format(name)) match {
-            case Some("Int") => IntFieldDef(_, _)
-            case Some("String") => StringFieldDef(_, _)
-            case None => StringFieldDef(_, _)
+            case Some("Int") => IntFieldDef(_, _, _)
+            case Some("String") => StringFieldDef(_, _, _)
+            case None => StringFieldDef(_, _, _)
           }
 
-          field(name, algo(weight))
+          field(name, algo(weight), ignoreMissing)
         }
 
         model.keySet.map(parseField).toList
@@ -171,5 +173,5 @@ trait ConfigurableModel extends OverrideConfig {
     }
   }
 
-  override val identifierFieldDef = new StringFieldDef(identifierField, NullDistanceAlgo())
+  override val identifierFieldDef = new StringFieldDef(identifierField, NullDistanceAlgo(), false)
 }

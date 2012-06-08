@@ -26,20 +26,20 @@ trait Document {
  The schema is composed by field definitions (FieldDef). Each field has a type,
  a name, and an associated distance algorithm
  */
-sealed abstract class FieldDef[A](val name: String, val algo: DistanceAlgo) {
+sealed abstract class FieldDef[A](val name: String, val algo: DistanceAlgo, val ignoreMissing: Boolean) {
   def apply(s: String): Field[A]
 }
 
 /*! We currently handle only basic field types (int, string and list of strings) */
-case class IntFieldDef(n: String, d: DistanceAlgo) extends FieldDef[Int](n, d) {
+case class IntFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[Int](n, d, i) {
   def apply(s: String) = IntField(Integer.parseInt(s))
 }
 
-case class StringFieldDef(n: String, d: DistanceAlgo) extends FieldDef[String](n, d) {
+case class StringFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[String](n, d, i) {
   def apply(s: String) = StringField(s)
 }
 
-case class ListFieldDef(n: String, d: DistanceAlgo) extends FieldDef[List[String]](n, d) {
+case class ListFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[List[String]](n, d, i) {
   def apply(s: String) = throw new Exception("Not implemented yet")
 }
 

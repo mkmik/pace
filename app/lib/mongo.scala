@@ -37,9 +37,9 @@ object MongoUtils {
   def toDocument(rs: DBObject)(implicit config: Config): Document = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
-       case IntFieldDef(name, _) => IntField(get[Int](rs, name).getOrElse(0))
-       case StringFieldDef(name, _) => StringField(get[String](rs, name).getOrElse(""))
-       case ListFieldDef(name, _) => ListField(for(i <- get[BasicDBList](rs, name).getOrElse(new BasicDBList())) yield StringField(i.asInstanceOf[String]))
+       case IntFieldDef(name, _, _) => IntField(get[Int](rs, name).getOrElse(0))
+       case StringFieldDef(name, _, _) => StringField(get[String](rs, name).getOrElse(""))
+       case ListFieldDef(name, _, _) => ListField(for(i <- get[BasicDBList](rs, name).getOrElse(new BasicDBList())) yield StringField(i.asInstanceOf[String]))
      })
    ):_*
   ))

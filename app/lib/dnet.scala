@@ -26,9 +26,9 @@ class XmlAdapter(implicit config: Config) extends Adapter[Elem] {
   def toDocument(xml: Elem): Document = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
-       case IntFieldDef(name, _) => IntField(1)
-       case StringFieldDef(name, _) => StringField(select(xml, name))
-       case ListFieldDef(name, _) => ListField(List(StringField(xml.toString)))
+       case IntFieldDef(name, _, _) => IntField(1)
+       case StringFieldDef(name, _, _) => StringField(select(xml, name))
+       case ListFieldDef(name, _, _) => ListField(List(StringField(xml.toString)))
      })
    ):_*
   ))

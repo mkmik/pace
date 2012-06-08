@@ -31,9 +31,9 @@ object DbUtils {
   def toDocument(rs: ResultSet)(implicit config: Config) = new MapDocument(Map(
     (for(field <- config.fields)
      yield (field.name, field match {
-       case IntFieldDef(name, _) => IntField(getInt(rs, name))
-       case StringFieldDef(name, _) => StringField(getString(rs, name))
-       case ListFieldDef(name, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
+       case IntFieldDef(name, _, _) => IntField(getInt(rs, name))
+       case StringFieldDef(name, _, _) => StringField(getString(rs, name))
+       case ListFieldDef(name, _, _) => ListField(for(i <- getList(rs, name)) yield StringField(i))
      })
    ):_*
   ))
@@ -42,16 +42,19 @@ object DbUtils {
 
 class DBSource(implicit config: Config) extends Source {
 
-  val queryEvaluator = QueryEvaluator("org.postgresql.Driver", "jdbc:postgresql://localhost:5433/openaire", "dnet", "dnetPwd") 
-
-//  val rs = queryEvaluator.select("select * from results_view") { row => toDocument(row) }
+  val queryEvaluator = QueryEvaluator("org.postgresql.Driver", "jdbc:postgresql://localhost:5432/openaire", "dnet", "dnetPwd") 
 
 
-  def documents(sortKey: String): Iterator[Document] = throw new Exception("NIY")
+
+  def documents(sortKey: String): Iterator[Document] =  {
+    import DbUtils._
+
+    queryEvaluator.select("select * from results_view") { row => toDocument(row) } iterator
+  }
 
   def get[A](id: A): Option[Document] = throw new Exception("NIY")
   def get[A](ids: Seq[A]): Iterator[Document] = throw new Exception("NIY")
 
-  def count: Long = throw new Exception("NIY")
-  def count(query: Map[String, Any]): Long = throw new Exception("NIY")
+  def count: Long = queryEvaluator.select("select count(*) from results_view") { row => row.getLong(1) } head
+  def count(query: Map[String, Any]): Long = queryEvaluator.select("select count(*) from results_view") { row => row.getLong(1) } head
 }

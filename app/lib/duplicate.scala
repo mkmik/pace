@@ -134,7 +134,7 @@ class SortedNeighborhood(implicit val config: Config) extends Duplicates {
 class Blocking(implicit config: Config) extends SortedNeighborhood {
   override def enqueue(q: Queue[Document], v: Document, windowSize: Int) = {
 
-    val blocking = new FieldFeatureExtractor(StringFieldDef(config.sortOn, NullDistanceAlgo())) with ValueExtractor[String] {
+    val blocking = new FieldFeatureExtractor(StringFieldDef(config.sortOn, NullDistanceAlgo(), false)) with ValueExtractor[String] {
       def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
         field match {
           case StringField(value) => List(value.take(config.blockingPrefix))
