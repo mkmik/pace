@@ -27,7 +27,15 @@ case class NullDistanceAlgo() extends DistanceAlgo {
 abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcohen.ss.AbstractStringDistance) extends DistanceAlgo {
   def concat(l: List[String]) = l.mkString(" ")
 
-  def distance(a: String, b: String): Double = ssalgo.score(a, b)
+  val alpha = Set(('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9') :_*)
+  val aliases = Map(('₁' to '₉') zip ('1' to '9') :_*) ++ Map(('⁴' to '⁹') zip ('4' to '9') :_*) ++ Map('¹' -> '1', '²' -> '2', '³' -> '3' )
+
+  def cleanup(s: String) = removeSymbols(fixAliases(s)).trim().replaceAll("""(?m)\s+""", " ").replaceAll("""\\n""", " ")
+
+  def removeSymbols(s: String) = for (ch <- s) yield if (alpha.contains(ch)) ch else ' '
+  def fixAliases(s: String) = for (ch <- s) yield if (aliases.contains(ch)) aliases(ch) else ch
+
+  def distance(a: String, b: String): Double = ssalgo.score(cleanup(a), cleanup(b))
   def distance(a: List[String], b: List[String]): Double = distance(concat(a), concat(b))
 
   def distance[A](a: Field[A], b: Field[A]): Double = (a, b) match {
