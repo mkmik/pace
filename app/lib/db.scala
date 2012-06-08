@@ -4,9 +4,8 @@ import com.twitter.querulous.evaluator.QueryEvaluator
 import java.sql.ResultSet
 
 import afm.model._
+import afm.io._
 
-
-//val rs = queryEvaluator.select("select * from results_view") { row => row.getArray("dc_creator").getArray.asInstanceOf[Array[String]](0)}.first.split("§§§")(1)
 
 object DbUtils {
 
@@ -38,4 +37,21 @@ object DbUtils {
      })
    ):_*
   ))
+}
+
+
+class DBSource(implicit config: Config) extends Source {
+
+  val queryEvaluator = QueryEvaluator("org.postgresql.Driver", "jdbc:postgresql://localhost:5433/openaire", "dnet", "dnetPwd") 
+
+//  val rs = queryEvaluator.select("select * from results_view") { row => toDocument(row) }
+
+
+  def documents(sortKey: String): Iterator[Document] = throw new Exception("NIY")
+
+  def get[A](id: A): Option[Document] = throw new Exception("NIY")
+  def get[A](ids: Seq[A]): Iterator[Document] = throw new Exception("NIY")
+
+  def count: Long = throw new Exception("NIY")
+  def count(query: Map[String, Any]): Long = throw new Exception("NIY")
 }

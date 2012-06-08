@@ -49,7 +49,8 @@ trait Config {
 //  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
 
   lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
-  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
+//  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
+  lazy val source = new DBSource()
   def collector: Collector = new MongoDBCollector(mongoDb(mongoCandidatesCollection))
 
   def mongoAdapter: Adapter[DBObject] = new BSONAdapter
