@@ -82,7 +82,7 @@ trait Duplicates extends ParallelCollector[Duplicate] {
     for (r <- window) {
       if (pivot.identifier != r.identifier) {
         val d = DistanceAlgo.distance(pivot, r)
-        if (d > config.threshold)
+        if (d >= config.threshold)
           collectorActor ! Duplicate(d, pivot, r)
       }
     }
