@@ -36,7 +36,7 @@ case class IntFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[
 }
 
 case class StringFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[String](n, d, i) {
-  def apply(s: String) = StringField(s)
+  def apply(s: String) = StringField(n)
 }
 
 case class ListFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef[List[String]](n, d, i) {
@@ -45,12 +45,20 @@ case class ListFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef
 
 
 /*! Each concrete document is built of field values */
-sealed abstract class Field[+A](val value: A)
+sealed abstract class Field[+A](val value: A) {
+  def isEmpty: Boolean = false
+}
 
 /*! of which we have concrete marker implementations */
 case class IntField(override val value: Int) extends Field[Int](value)
-case class StringField(override val value: String) extends Field[String](value)
-case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[Field[String]]](value)
+
+case class StringField(override val value: String) extends Field[String](value) {
+  override def isEmpty = value == null || value == ""
+}
+
+case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[Field[String]]](value) {
+  override def isEmpty = value == null || value.isEmpty
+}
 
 
 /*! A concrete implementation of a document is done by keeping a map of string->fields */

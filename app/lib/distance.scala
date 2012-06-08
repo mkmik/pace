@@ -41,11 +41,23 @@ abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcoh
  */
 object DistanceAlgo {
   def distance(a: Document, b: Document)(implicit config: Config) = {
+
+    def fieldDistance(a: Document, b: Document, i: FieldDef[_]) = {
+      if (i.algo.weight == 0) { // optimization for 0 weight
+        0
+      } else {
+        val va = a(i.name).get
+        val vb = b(i.name).get
+        if(i.ignoreMissing && (va.isEmpty || vb.isEmpty))
+          1
+        else
+          i.algo.weight * i.algo.distance(va, vb)
+      }
+    }
+
     val w = config.fields.map(_.algo.weight).sum
     (for(i <- config.fields)
-     yield (if (i.algo.weight == 0) 0
-            else
-              i.algo.weight * i.algo.distance(a(i.name).get, b(i.name).get))).sum / w
+     yield fieldDistance(a, b, i)).sum / w
   }
 }
 
