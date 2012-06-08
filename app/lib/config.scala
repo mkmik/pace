@@ -161,6 +161,7 @@ trait ConfigurableModel extends OverrideConfig {
           val field = conf.getString("pace.model.%s.type".format(name)) match {
             case Some("Int") => IntFieldDef(_, _, _)
             case Some("String") => StringFieldDef(_, _, _)
+            case Some("List") => ListFieldDef(_, _, _)
             case None => StringFieldDef(_, _, _)
           }
 
