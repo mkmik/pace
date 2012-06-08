@@ -48,7 +48,7 @@ trait Config {
 //  private val mongoDb = MongoConnection()("driver_small")
 //  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
 
-  private lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
+  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
   lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
   def collector: Collector = new MongoDBCollector(mongoDb(mongoCandidatesCollection))
 
