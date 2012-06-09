@@ -87,16 +87,17 @@ trait Duplicates extends ParallelCollector[Duplicate] {
         val d = algo.distance(pivot, r)
         val was = d
         if (d >= config.threshold) {
-          if(d == 1) {
-            collectorActor ! Duplicate(d, pivot, r)
-          } else {
+          val (score, exclude) = if (d == 1)
+            (d, false)
+          else {
             val d = algoStrict.distance(pivot, r)
-            println("Trying again because we don't have an exact match, was %s now %s".format(was, d))
             if (d >= config.threshold)
-              collectorActor ! Duplicate(d, pivot, r)
+              (d, false)
             else
-              collectorActor ! Duplicate(d, pivot, r, true)
+              (d, true)
           }
+
+          collectorActor ! Duplicate(score, pivot, r, exclude)
         }
       }
     }

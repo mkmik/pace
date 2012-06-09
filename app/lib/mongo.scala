@@ -26,7 +26,17 @@ class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) e
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
 
-  def append(dup: Duplicate) = coll += dup.toMongo
+  val rejectedColl = config.mongoDb("rejected")
+  rejectedColl.drop()
+  rejectedColl.ensureIndex(MongoDBObject("d" -> 1))
+
+  def append(dup: Duplicate) = {
+    val c = dup match {
+      case Duplicate(_, _, _, false) => coll
+      case Duplicate(_, _, _, true) => rejectedColl
+    }
+    c += dup.toMongo
+  }
 
   def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
 }
