@@ -25,20 +25,33 @@ class MongoDBCollector(val coll: MongoCollection)(implicit val config: Config) e
 
   coll.drop()
   coll.ensureIndex(MongoDBObject("d" -> 1))
+  coll.ensureIndex(MongoDBObject("ids" -> 1))
+
 
   val rejectedColl = config.mongoDb("rejected")
   rejectedColl.drop()
   rejectedColl.ensureIndex(MongoDBObject("d" -> 1))
+  rejectedColl.ensureIndex(MongoDBObject("ids" -> 1))
 
   def append(dup: Duplicate) = {
     val c = dup match {
       case Duplicate(_, _, _, false) => coll
       case Duplicate(_, _, _, true) => rejectedColl
     }
-    c += dup.toMongo
+    if (c.count(MongoDBObject("ids" -> dup.a.identifier)) + c.count(MongoDBObject("ids" -> dup.b.identifier)) == 0) {
+      c += dup.toMongo
+    } else {
+      c.update(MongoDBObject("ids" -> dup.a.identifier), $addToSet ("ids" -> dup.b.identifier))
+      c.update(MongoDBObject("ids" -> dup.b.identifier), $addToSet ("ids" -> dup.a.identifier))
+    }
   }
 
   def realDups = (config.source.count(Map("kind" -> "duplicate")).toDouble * shrinkingFactor).toLong
+}
+
+// todo, handle grouping here
+class GroupingMongoDBCollector(coll: MongoCollection)(implicit config: Config) extends MongoDBCollector(coll) {
+  //override def append(dup: Duplicate) = {}
 }
 
 object MongoUtils {
@@ -70,7 +83,9 @@ object MongoUtils {
   implicit def duplicateToMongo(dup: Duplicate): {def toMongo: DBObject} = new {
     def toMongo = MongoDBObject("d" -> dup.d,
                                 "left" -> dup.a.toMongo,
-                                "right" -> dup.b.toMongo)
+                                "right" -> dup.b.toMongo,
+                                "ids" -> List(dup.a.identifier, dup.b.identifier)
+                              )
   }
 
 }
