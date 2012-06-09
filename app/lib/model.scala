@@ -57,7 +57,7 @@ case class StringField(override val value: String) extends Field[String](value) 
 }
 
 case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[Field[String]]](value) {
-  override def isEmpty = value == null || value.isEmpty || value.head == "" || value.head == "NULL"
+  override def isEmpty = value == null || value.isEmpty || value.head.isEmpty
 }
 
 
