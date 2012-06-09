@@ -86,9 +86,16 @@ class DistanceScorer(val fields: List[FieldDef[_]]) {
  */
 case class JaroWinkler(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.JaroWinkler())
 
+case class Level2JaroWinkler(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.Level2JaroWinkler())
+
+
 /*! Some second string distance algorithms don't return the value in the correct range, so we need to normalize it.
  */
 case class Levenstein(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.Levenstein()) {
+  override def normalize(d: Double) = 1/pow((abs(d) + 1), 0.1)
+}
+
+case class Level2Levenstein(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.Level2Levenstein()) {
   override def normalize(d: Double) = 1/pow((abs(d) + 1), 0.1)
 }
 

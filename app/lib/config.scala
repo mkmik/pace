@@ -157,6 +157,8 @@ trait ConfigurableModel extends OverrideConfig {
           val algo = conf.getString("pace.model%s.%s.algo".format(base, name)) match {
             case Some("JaroWinkler") => JaroWinkler(_)
             case Some("Levenstein") => Levenstein(_)
+            case Some("Level2JaroWinkler") => Level2JaroWinkler(_)
+            case Some("Level2Levenstein") => Level2Levenstein(_)
             case Some("Null") => (_: Double) => NullDistanceAlgo()
             case None => (_: Double) => NullDistanceAlgo()
           }
