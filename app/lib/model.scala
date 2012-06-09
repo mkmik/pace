@@ -53,11 +53,11 @@ sealed abstract class Field[+A](val value: A) {
 case class IntField(override val value: Int) extends Field[Int](value)
 
 case class StringField(override val value: String) extends Field[String](value) {
-  override def isEmpty = value == null || value == ""
+  override def isEmpty = value == null || value == "" || value.endsWith("01-01")
 }
 
 case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[Field[String]]](value) {
-  override def isEmpty = value == null || value.isEmpty
+  override def isEmpty = value == null || value.isEmpty || value.head == "" || value.head == "NULL"
 }
 
 
