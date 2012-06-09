@@ -58,10 +58,14 @@ abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcoh
   def normalize(d: Double): Double = d
 }
 
+object DistanceAlgo {
+  def distance(a: Document, b: Document)(implicit config: Config) = new DistanceScorer(config.fields).distance(a, b)
+}
+
 /*! The distance between two documents is given by the weighted mean of the field distances
  */
-object DistanceAlgo {
-  def distance(a: Document, b: Document)(implicit config: Config) = {
+class DistanceScorer(val fields: List[FieldDef[_]]) {
+  def distance(a: Document, b: Document) = {
 
     def fieldDistance(a: Document, b: Document, i: FieldDef[_]) = {
       if (i.algo.weight == 0) { // optimization for 0 weight
@@ -76,8 +80,8 @@ object DistanceAlgo {
       }
     }
 
-    val w = config.fields.map(_.algo.weight).sum
-    (for(i <- config.fields)
+    val w = fields.map(_.algo.weight).sum
+    (for(i <- fields)
      yield fieldDistance(a, b, i)).sum / w
   }
 }
