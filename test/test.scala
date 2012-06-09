@@ -51,3 +51,36 @@ object DbSpec extends Specification {
     }
   }
 }
+
+object DistanceSpec extends Specification {
+  import afm.distance._
+
+  val l = Levenstein(1)
+
+  "Distance" should {
+    "handle roman numerals" in {
+      val a = "Hello I,IV"
+      val b = "Hello II,IV"
+
+      l.getRomans(l.cleanup(a)) must be equalTo(Set("I", "IV"))
+
+      l.checkNumbers(l.cleanup(a), l.cleanup(b)) must be equalTo(true)
+
+      l.distance(a, b) must be equalTo(0.5)
+    }
+
+    "handle special html entities" in {
+      val a = "Investigating changes in basal conditions of Variegated Glacier prior to and during its 1982-1983 surge"
+      val b = "Investigating changes in basal conditions of Variegated Glacier prior to and during its 1982&ndash;1983 surge"
+
+      l.cleanup(a) must be equalTo(l.cleanup(b))
+    }
+
+    "cleanup symbols" in {
+      val a = "Energy transfer mechanism and Auger effect in Er3+ coupled silicon nanoparticle samples"
+      val b = "Energy transfer mechanism and Auger effect in Er(3+) coupled silicon nanoparticle samples"
+
+      l.cleanup(a) must be equalTo(l.cleanup(b))
+    }
+  }
+}

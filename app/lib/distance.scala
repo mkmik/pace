@@ -32,15 +32,21 @@ abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcoh
   val aliases = Map(('₁' to '₉') zip ('1' to '9') :_*) ++ Map(('⁴' to '⁹') zip ('4' to '9') :_*) ++ Map('¹' -> '1', '²' -> '2', '³' -> '3' )
 
 
-  def cleanup(s: String) = removeSymbols(fixAliases(s)).replaceAll("&ndash;", " ").replaceAll("&amp;", " ").replaceAll("&minus;", " ").trim().replaceAll("""(?m)\s+""", " ").replaceAll("""\\n""", " ")
+  def cleanup(s: String) = removeSymbols(fixAliases(s).replaceAll("&ndash;", " ").replaceAll("&amp;", " ").replaceAll("&minus;", " ")).replaceAll("([0-9]+)"," $1 ").trim().replaceAll("""(?m)\s+""", " ").replaceAll("""\\n""", " ")
 
   def removeSymbols(s: String) = for (ch <- s) yield if (alpha.contains(ch)) ch else ' '
   def fixAliases(s: String) = for (ch <- s) yield if (aliases.contains(ch)) aliases(ch) else ch
 
   def getNumbers(s: String) = s.filter(ch => numbers.contains(ch))
-  def checkNumbers(a: String, b: String) = getNumbers(a) != getNumbers(b)
+  def isRoman(s: String) = s.replaceAll("""^M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$""", "qwertyuiop") == "qwertyuiop"
+  def getRomans(s: String) = Set(s.split(" ").filter(isRoman) :_*)
 
-  def distance(a: String, b: String): Double = if(checkNumbers(a, b)) 0.5 else ssalgo.score(cleanup(a), cleanup(b))
+  def checkNumbers(a: String, b: String) = getNumbers(a) != getNumbers(b) || getRomans(a) != getRomans(b)
+
+  def distance(a: String, b: String): Double = {
+    val (ca, cb) = (cleanup(a), cleanup(b))
+    if(checkNumbers(ca, cb)) 0.5 else normalize(ssalgo.score(ca, cb))
+  }
   def distance(a: List[String], b: List[String]): Double = distance(concat(a), concat(b))
 
   def distance[A](a: Field[A], b: Field[A]): Double = (a, b) match {
@@ -48,6 +54,8 @@ abstract class SecondStringDistanceAlgo(val weight: Double, val ssalgo: com.wcoh
     case (ListField(av), ListField(bv)) => distance(av.asInstanceOf[List[StringField]].map(_.value), bv.asInstanceOf[List[StringField]].map(_.value))
     case _ => throw new Exception("invalid types")
   }
+
+  def normalize(d: Double): Double = d
 }
 
 /*! The distance between two documents is given by the weighted mean of the field distances
@@ -81,6 +89,6 @@ case class JaroWinkler(w: Double) extends SecondStringDistanceAlgo(w, new com.wc
 /*! Some second string distance algorithms don't return the value in the correct range, so we need to normalize it.
  */
 case class Levenstein(w: Double) extends SecondStringDistanceAlgo(w, new com.wcohen.ss.Levenstein()) {
-  override def distance(a: String, b: String) = 1/pow((abs(super.distance(a, b)) + 1), 0.1)
+  override def normalize(d: Double) = 1/pow((abs(d) + 1), 0.1)
 }
 
