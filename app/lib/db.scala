@@ -16,7 +16,7 @@ object DbUtils {
         if(components.length > 1) {
           components(1)
         } else {
-          ""
+          i
         }
       } else { ""
             })
