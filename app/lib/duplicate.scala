@@ -23,7 +23,7 @@ import afm.distance._
 
 case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
-case class Duplicate(val d: Double, val a: Document, val b: Document) {
+case class Duplicate(val d: Double, val a: Document, val b: Document, val exclude: Boolean = false) {
 
   def formattedIds[A: Ordering](xa: A, xb: A) = { 
     val ids = List(xa, xb)
@@ -79,11 +79,25 @@ trait Duplicates extends ParallelCollector[Duplicate] {
                      windowSize: Int = config.windowSize, totalRecords: Option[Long] = None): Metrics
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
+    val algo = new DistanceScorer(config.fields)
+    val algoStrict = new DistanceScorer(config.strictFields)
+
     for (r <- window) {
       if (pivot.identifier != r.identifier) {
-        val d = DistanceAlgo.distance(pivot, r)
-        if (d >= config.threshold)
-          collectorActor ! Duplicate(d, pivot, r)
+        val d = algo.distance(pivot, r)
+        val was = d
+        if (d >= config.threshold) {
+          if(d == 1) {
+            collectorActor ! Duplicate(d, pivot, r)
+          } else {
+            val d = algoStrict.distance(pivot, r)
+            println("Trying again because we don't have an exact match, was %s now %s".format(was, d))
+            if (d >= config.threshold)
+              collectorActor ! Duplicate(d, pivot, r)
+            else
+              collectorActor ! Duplicate(d, pivot, r, true)
+          }
+        }
       }
     }
   }

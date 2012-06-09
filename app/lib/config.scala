@@ -41,6 +41,8 @@ trait ConfigProvider {
  */
 trait Config {
   val fields: List[FieldDef[_]]
+  val strictFields: List[FieldDef[_]]
+
   val identifierFieldDef: FieldDef[_]
 
   /*! Some of the object we construct here might need this configuration instance */
@@ -139,26 +141,27 @@ trait OverrideConfig extends Config {
 }
 
 trait ConfigurableModel extends OverrideConfig {
-  override val fields= parseFields
+  override val fields = parseFields()
+  override val strictFields = parseFields(".strict")
 
-  def parseFields: List[FieldDef[_]] = {
+  def parseFields(base: String = ""): List[FieldDef[_]] = {
     import scala.collection.JavaConversions._
     import scala.collection.JavaConverters._
 
     conf.getObject("pace.model") match {
       case Some(model) => {
         def parseField(name: String) = {
-          val weight = conf.getDouble("pace.model.%s.weight".format(name)).getOrElse(1.0)
-          val ignoreMissing = conf.getBoolean("pace.model.%s.ignoreMissing".format(name)).getOrElse(false)
+          val weight = conf.getDouble("pace.model%s.%s.weight".format(base, name)).getOrElse(1.0)
+          val ignoreMissing = conf.getBoolean("pace.model%s.%s.ignoreMissing".format(base, name)).getOrElse(false)
 
-          val algo = conf.getString("pace.model.%s.algo".format(name)) match {
+          val algo = conf.getString("pace.model%s.%s.algo".format(base, name)) match {
             case Some("JaroWinkler") => JaroWinkler(_)
             case Some("Levenstein") => Levenstein(_)
             case Some("Null") => (_: Double) => NullDistanceAlgo()
             case None => (_: Double) => NullDistanceAlgo()
           }
 
-          val field = conf.getString("pace.model.%s.type".format(name)) match {
+          val field = conf.getString("pace.model%s.%s.type".format(base, name)) match {
             case Some("Int") => IntFieldDef(_, _, _)
             case Some("String") => StringFieldDef(_, _, _)
             case Some("List") => ListFieldDef(_, _, _)
@@ -168,7 +171,7 @@ trait ConfigurableModel extends OverrideConfig {
           field(name, algo(weight), ignoreMissing)
         }
 
-        model.keySet.map(parseField).toList
+        model.keySet.filter(k => k != "strict").map(parseField).toList
       }
       case None => List()
     }
