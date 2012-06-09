@@ -112,10 +112,10 @@ trait Duplicates extends ParallelCollector[Duplicate] {
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
     println("THREADS %s".format(threads))
     println("FOUND DUPS %s".format(dups))
-    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
-    println("TRUE POSITIVES %s".format(collector.truePositives))
-    println("PRECISION %s".format(precision))
-    println("RECALL %s".format(recall))
+//    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
+//    println("TRUE POSITIVES %s".format(collector.truePositives))
+//    println("PRECISION %s".format(precision))
+//    println("RECALL %s".format(recall))
 
     Metrics(precision, recall, dups)
   }
