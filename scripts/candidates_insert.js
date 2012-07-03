@@ -21,3 +21,6 @@ print("update results set merged = 'f' where merged = 't';");
 print("update results set merged = 't' from merges_results m where m.merges_id = resultid;");
 print("INSERT INTO results_projects (result,project,frommerge) SELECT m.merged_id,rp.project,'t' FROM merges_results m JOIN results_projects rp on (m.merges_id = rp.result) WHERE project not in (SELECT project FROM results_projects rp2 WHERE rp2.result = m.merged_id);");
 print("COMMIT;");
+
+print("DROP TABLE IF EXISTS merges_results_log;");
+print("DROP TABLE IF EXISTS merges_results;");
