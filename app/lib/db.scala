@@ -49,12 +49,12 @@ class DBSource(implicit config: Config) extends Source {
   def documents(sortKey: String): Iterator[Document] =  {
     import DbUtils._
 
-    queryEvaluator.select("select * from results_view") { row => toDocument(row) } iterator
+    queryEvaluator.select("select * from results_view_materialized order by dc_title") { row => toDocument(row) } iterator
   }
 
   def get[A](id: A): Option[Document] = throw new Exception("NIY")
   def get[A](ids: Seq[A]): Iterator[Document] = throw new Exception("NIY")
 
-  def count: Long = queryEvaluator.select("select count(*) from results_view") { row => row.getLong(1) } head
-  def count(query: Map[String, Any]): Long = queryEvaluator.select("select count(*) from results_view") { row => row.getLong(1) } head
+  def count: Long = queryEvaluator.select("select count(*) from results_view_materialized") { row => row.getLong(1) } head
+  def count(query: Map[String, Any]): Long = queryEvaluator.select("select count(*) from results_view_materialized") { row => row.getLong(1) } head
 }
