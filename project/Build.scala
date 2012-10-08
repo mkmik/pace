@@ -4,7 +4,7 @@ import PlayProject._
 
 object ApplicationBuild extends Build {
 
-  val appName         = "pace"
+  val appName         = "pace-web"
   val appVersion      = "1.0"
 
   val appDependencies = Seq(
@@ -31,10 +31,12 @@ object ApplicationBuild extends Build {
     "org.scalatest" % "scalatest" % "1.2"
   )
 
+  val paceLib = Project("pace", file("modules/pace"))
+
   val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
     // Add your own project settings here
     resolvers += "Clojars" at "http://clojars.org/repo/",
     resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases"
-  )
+  ).dependsOn(paceLib)
 
 }
