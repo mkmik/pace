@@ -26,7 +26,9 @@ object ApplicationBuild extends Build {
 
       "com.typesafe.config" % "config" % "0.2.1",
 
-      "com.typesafe.akka" % "akka-remote" % "2.0"
+      "com.typesafe.akka" % "akka-remote" % "2.0",
+
+      "org.scalatest" % "scalatest" % "1.2"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
