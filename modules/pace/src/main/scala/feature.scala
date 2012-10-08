@@ -30,10 +30,14 @@ class FieldFeatureExtractor[A](val field: FieldDef[A])(implicit val config: Conf
   })
 }
 
+object NGramExtractor {
+  def extractNGrams(value: String, size: Int, max: Int): Seq[String] =  value.sliding(size).take(max).filter(x => !x.contains(" ")).map(_.replace(":","_")).toSeq
+}
+
 trait NGramValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
     field match {
-      case StringField(value) => value.sliding(config.ngramSize).take(config.maxNgrams).map(_.replace(":","_")).toSeq
+      case StringField(value) => NGramExtractor.extractNGrams(value, config.ngramSize, config.maxNgrams)
       case _ => throw new Exception("unsupported field type")
     }
   }
