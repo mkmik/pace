@@ -3,11 +3,11 @@ package afm
 import com.typesafe.config._
 import scala.collection._
 import scala.collection.immutable.Map
-import com.mongodb.casbah.Imports._
+//import com.mongodb.casbah.Imports._
 import com.typesafe.config.ConfigValue
 
 import afm.model._
-import afm.mongo._
+//import afm.mongo._
 import afm.scanner._
 import afm.distance._
 import afm.duplicates._
@@ -51,17 +51,22 @@ trait Config {
 //  private val mongoDb = MongoConnection()("driver_small")
 //  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
 
-  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
+//  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
 //  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
-  lazy val source = new DBSource()
-  def collector: Collector = new GroupingMongoDBCollector(mongoDb(mongoCandidatesCollection))
+  val source : Source
 
+//  lazy val source = new DBSource()
+  //def collector: Collector = new GroupingMongoDBCollector(mongoDb(mongoCandidatesCollection))
+  def collector: Collector
+
+/*
   def mongoAdapter: Adapter[DBObject] = new BSONAdapter
 
   def mongoHostname = "localhost"
   def mongoDbName = "pace"
   def mongoSourceCollection: String = "people"
   def mongoCandidatesCollection = "candidate"
+*/
 
   def cores: Option[Int] = None
   def limit: Option[Int] = None
@@ -78,7 +83,8 @@ trait Config {
   def simhashRotationStep = 2
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
-  def scanner: Scanner = new SingleFieldScanner
+  //def scanner: Scanner = new SingleFieldScanner
+  def scanner: Scanner
   def duplicateDetector: Duplicates = new SortedNeighborhood
 
   def blockingPrefix = 4
@@ -90,6 +96,7 @@ trait Config {
 trait OverrideConfig extends Config {
   val conf = OptionalConfigFactory.load("conf/pace.conf")
 
+/*
   override def mongoHostname = conf.getString("pace.mongo.hostName").getOrElse(super.mongoHostname)
   override def mongoDbName = conf.getString("pace.mongo.dbName").getOrElse(super.mongoDbName)
   override def mongoSourceCollection = conf.getString("pace.mongo.sourceCollection").get // OrElse(super.mongoSourceCollection)
@@ -99,6 +106,7 @@ trait OverrideConfig extends Config {
     case Some("dnet") => new DNetMongoDBAdapter
     case None => super.mongoAdapter
   }
+*/
 
   override def cores = conf.getInt("pace.cores")
   override def limit = conf.getInt("pace.limit")
@@ -120,13 +128,15 @@ trait OverrideConfig extends Config {
     case None => super.simhashAlgo
   }
 
-  override def scanner = conf.getString("pace.algo") match {
+/**  override def scanner = conf.getString("pace.algo") match {
+
     case Some("singleField") => new SingleFieldScanner
     case Some("mergedSimhash") => new MergedSimhashScanner
     case Some("simhash") => new MultiPassSimhashScanner
     case Some("ngram") => new NgramScanner
     case None => super.scanner
   }
+*/
 
   override def duplicateDetector = conf.getString("pace.detector") match {
     case Some("sortedNeighborhood") => new SortedNeighborhood

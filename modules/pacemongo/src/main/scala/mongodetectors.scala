@@ -1,10 +1,11 @@
-package afm.detectors
+package afm.mongo.detectors
 
 import afm._
 import afm.model._
+import afm.detectors._
 import afm.io._
 import afm.duplicates._
-import afm.DbUtils._
+//import afm.DbUtils._
 import afm.util._
 
 import com.mongodb.casbah.Imports._
@@ -23,10 +24,6 @@ import au.com.bytecode.opencsv.CSVReader
 import akka.dispatch.Future
 
 
-trait Detector {
-  def run: Metrics
-}
-
 class MongoStreamDetector(val key: String)(implicit collector: Collector, implicit val config: Config) extends Detector {
   def run = {
     val rs = config.source.documents(key)
@@ -39,6 +36,7 @@ class MongoStreamDetector(val key: String)(implicit collector: Collector, implic
     config.duplicateDetector.windowedDetect(docs, collector, config.windowSize, totalRecords=Some(totalRecords))
   }
 }
+
 
 class MongoSortedHashDetector(val hashes: Int, val totalRecords: Option[Long] = None)(implicit val config: Config) extends Detector {
   def run = {

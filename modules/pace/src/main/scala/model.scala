@@ -2,11 +2,11 @@ package afm.model
 
 import scala.collection._
 import scala.collection.immutable.Map
-import com.mongodb.casbah.Imports._
+//import com.mongodb.casbah.Imports._
 import com.typesafe.config.ConfigValue
 
 import afm._
-import afm.mongo._
+//import afm.mongo._
 import afm.distance._
 import afm.detectors._
 import afm.duplicates._

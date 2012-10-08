@@ -1,6 +1,6 @@
 package afm.io
 
-import com.mongodb.casbah.Imports._
+//import com.mongodb.casbah.Imports._
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 

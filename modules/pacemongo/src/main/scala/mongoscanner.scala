@@ -1,23 +1,19 @@
-package afm.scanner
+package afm.mongo.scanner
 
 import afm._
 import afm.feature._
+import afm.mongo.feature._
 import afm.model._
 import afm.distance._
 import afm.detectors._
+import afm.mongo.detectors._
 import afm.duplicates._
-
-
-trait Scanner extends ConfigProvider {
-  implicit val collector = config.collector
-  def run: Metrics
-}
+import afm.scanner._
 
 
 class SingleFieldScanner(implicit val config: Config) extends Scanner {
   def run = new MongoStreamDetector(config.sortOn).run
 }
-
 
 trait FeaturedScanner {
   self: Scanner =>

@@ -11,7 +11,7 @@ import scala.actors.Actor._
 import scala.math.round
 import scala.sys.runtime
 
-import com.mongodb.casbah.Imports._
+//import com.mongodb.casbah.Imports._
 
 import afm._
 import afm.model._
