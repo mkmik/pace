@@ -30,6 +30,7 @@ object ApplicationBuild extends Build {
     "org.scalaj" %% "scalaj-time" % "0.6",
 
     "org.specs2" %% "specs2" % "1.12.3" % "test",
+    "eu.dnetlib" % "dnet-openaire-data-protos" % "1.0-SNAPSHOT" % "test",
 
     "org.json" % "json" % "20090211"
   )
@@ -38,6 +39,9 @@ object ApplicationBuild extends Build {
     libraryDependencies := libDependencies,
     resolvers += "Clojars" at "http://clojars.org/repo/",
     resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases",
+    resolvers += "RI D-Net Bootstrap" at "http://maven.research-infrastructures.eu/nexus/content/repositories/dnet-bootstrap",
+    resolvers += "RI D-Net Snapshots" at "http://maven.research-infrastructures.eu/nexus/content/repositories/dnet-snapshots",
+    resolvers += "RI D-Net Deps" at "http://maven.research-infrastructures.eu/nexus/content/repositories/dnet-deps",
     resolvers += "Typesafe" at "http://repo.typesafe.com/typesafe/releases/",
     resolvers += "Sonatyle releases"  at "http://oss.sonatype.org/content/repositories/releases"
   )
