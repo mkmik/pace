@@ -9,3 +9,4 @@ conf/pace.conf
 .classpath
 .project
 .settings
+.cache
