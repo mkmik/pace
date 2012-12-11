@@ -15,6 +15,7 @@ import eu.dnetlib.data.proto.TypeProtos
 import eu.dnetlib.data.proto.InferenceProtos.Inference
 import eu.dnetlib.data.proto.StructuredPropertyProtos.StructuredProperty
 import eu.dnetlib.data.proto.QualifierProtos.Qualifier
+import pace.ProtoDistance
 
 object Builder {
   type B = Oaf.Builder
@@ -36,11 +37,14 @@ object DetectorSpec extends Specification {
   "pace" should {
     "rule" in {
 
-      val resA = Builder.ResultBuilder(_.setId("A").setMetadata(Builder.ResultMetadata(_.addTitle("Test")))).build;
+      val resA = Builder.ResultBuilder(_.setId("A").setMetadata(Builder.ResultMetadata(_.addTitle("Test").addTitle("Boh")))).build;
       val resB = Builder.ResultBuilder(_.setId("B").setMetadata(Builder.ResultMetadata(_.addTitle("Tost")))).build;
 
       println("resA", resA)
       println("resB", resB)
+
+      val distance = new ProtoDistance()
+      println(distance.toDocument(resA))
     }
   }
 }
