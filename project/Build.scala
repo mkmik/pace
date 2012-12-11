@@ -29,6 +29,8 @@ object ApplicationBuild extends Build {
 
     "org.scalaj" %% "scalaj-time" % "0.6",
 
+    "org.specs2" %% "specs2" % "1.12.3" % "test",
+
     "org.json" % "json" % "20090211"
   )
 
@@ -36,6 +38,7 @@ object ApplicationBuild extends Build {
     libraryDependencies := libDependencies,
     resolvers += "Clojars" at "http://clojars.org/repo/",
     resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases",
-    resolvers += "Typesafe" at "http://repo.typesafe.com/typesafe/releases/"
+    resolvers += "Typesafe" at "http://repo.typesafe.com/typesafe/releases/",
+    resolvers += "Sonatyle releases"  at "http://oss.sonatype.org/content/repositories/releases"
   )
 }
