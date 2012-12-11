@@ -47,6 +47,10 @@ sealed abstract class Field[+A](val value: A) {
   def isEmpty: Boolean = false
 }
 
+case class EmptyField() extends Field[Any](null) {
+  override def isEmpty = true
+}
+
 /*! of which we have concrete marker implementations */
 case class IntField(override val value: Int) extends Field[Int](value)
 
