@@ -67,10 +67,14 @@ class DistanceScorer(val fields: List[FieldDef[_]]) {
         // TODO: check for existence
         val va = a(i.name).getOrElse(EmptyField())
         val vb = b(i.name).getOrElse(EmptyField())
-        if (i.ignoreMissing && (va.isEmpty || vb.isEmpty))
-          1
-        else
+        if (va.isEmpty || vb.isEmpty) {
+          if (i.ignoreMissing)
+            0
+          else
+            1
+        } else {
           i.algo.weight * i.algo.distance(va, vb)
+        }
       }
     }
 

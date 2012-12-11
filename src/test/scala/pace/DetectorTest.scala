@@ -38,7 +38,7 @@ object DetectorSpec extends Specification {
     "rule" in {
       implicit val config: OverrideConfig = new Object with ConfigurableModel
 
-      val resA = Builder.ResultBuilder(_.setId("A").setMetadata(Builder.ResultMetadata(_.addTitle("Test").addTitle("Boh")))).build;
+      val resA = Builder.ResultBuilder(_.setId("A").setMetadata(Builder.ResultMetadata(_.addTitle("Tost").addTitle("Test")))).build;
       val resB = Builder.ResultBuilder(_.setId("B").setMetadata(Builder.ResultMetadata(_.addTitle("Tost")))).build;
 
       val distance = new ProtoDistance()

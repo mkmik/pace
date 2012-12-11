@@ -46,7 +46,7 @@ class ProtoDistance(implicit config: Config) extends Distance[GeneratedMessage] 
 
       def down(v: Object) = v match {
         case v: GeneratedMessage => traverse(v, thisPath, level + 1)(body)
-        case o => body(thisPath.reverse.mkString("."), stringValue(v))
+        case o => body(thisPath.reverse.mkString(">"), stringValue(v))
       }
 
       if (desc.isRepeated()) {
