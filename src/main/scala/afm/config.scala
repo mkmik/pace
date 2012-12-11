@@ -51,11 +51,11 @@ trait Config {
 
   //  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
   //  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
-  val source: Source
+//  val source: Source
 
   //  lazy val source = new DBSource()
   //def collector: Collector = new GroupingMongoDBCollector(mongoDb(mongoCandidatesCollection))
-  def collector: Collector
+//  def collector: Collector
 
   /*
   def mongoAdapter: Adapter[DBObject] = new BSONAdapter
@@ -82,7 +82,7 @@ trait Config {
   def simhashAlgo: Simhash = new AdditiveSimhash()
 
   //def scanner: Scanner = new SingleFieldScanner
-  def scanner: Scanner
+  //def scanner: Scanner
   def duplicateDetector: Duplicates = new SortedNeighborhood
 
   def blockingPrefix = 4

@@ -47,10 +47,12 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
 
   def realDups: Long
 
+/*
   def shrinkingFactor: Double = config.limit match {
     case Some(l) => l.toDouble / config.source.count.toDouble
     case None => 1.0
   }
+ */
 
   def append(dup: Duplicate)
 
