@@ -1,4 +1,4 @@
-seq(doccoSettings: _*)
+//seq(doccoSettings: _*)
 
 scalacOptions += "-deprecation"
 
@@ -9,3 +9,5 @@ publishTo := Some("RI Snapshots" at "http://maven.research-infrastructures.eu/ne
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 publishMavenStyle := true
+
+scalaVersion := "2.9.2"

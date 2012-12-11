@@ -1,6 +1,5 @@
 import sbt._
 import Keys._
-import PlayProject._
 
 object ApplicationBuild extends Build {
 
@@ -26,7 +25,7 @@ object ApplicationBuild extends Build {
 
     "com.typesafe.config" % "config" % "0.2.1",
 
-    "com.typesafe.akka" % "akka-remote" % "2.0",
+    "com.typesafe.akka" % "akka-remote" % "2.0.3",
 
     "org.scalatest" % "scalatest" % "1.2"
   )
@@ -49,13 +48,15 @@ object ApplicationBuild extends Build {
 
     "net.sf.opencsv" % "opencsv" % "2.1",
 
-    "com.typesafe.config" % "config" % "0.2.1",
+    "com.typesafe" % "config" % "0.3.1",
 
-    "com.typesafe.akka" % "akka-remote" % "2.0",
+    "com.typesafe.akka" % "akka-remote" % "2.0.3",
 
     "org.scalatest" % "scalatest" % "1.2",
 
-    "org.scalaj" %% "scalaj-time" % "0.6"
+    "org.scalaj" %% "scalaj-time" % "0.6",
+
+    "org.json" % "json" % "20090211"
   )
 
 
@@ -71,7 +72,8 @@ object ApplicationBuild extends Build {
   val paceLib = Project("pace", file("modules/pace")).settings(
     libraryDependencies := libDependencies,
     resolvers += "Clojars" at "http://clojars.org/repo/",
-    resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases"
+    resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases",
+    resolvers += "Typesafe" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
   val paceLibDb = Project("pace-db", file("modules/pacedb")).settings(
@@ -86,10 +88,20 @@ object ApplicationBuild extends Build {
     resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases"
   ).dependsOn(paceLib)
 
-  val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
+
+  val main = Project(appName, file(".")).settings(
+    libraryDependencies := appDependencies,
     // Add your own project settings here
     resolvers += "Clojars" at "http://clojars.org/repo/",
     resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases"
   ).dependsOn(paceLib, paceLibDb, paceLibMongo)
 
+
+/*
+  val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
+    // Add your own project settings here
+    resolvers += "Clojars" at "http://clojars.org/repo/",
+    resolvers += "RI Releases" at "http://maven.research-infrastructures.eu/nexus/content/repositories/releases"
+  ).dependsOn(paceLib, paceLibDb, paceLibMongo)
+*/
 }
