@@ -1,19 +1,17 @@
 package afm.util
 
 import collection.JavaConversions._
-import java.util.concurrent.{LinkedBlockingQueue, BlockingQueue, TimeUnit}
+import java.util.concurrent.{ LinkedBlockingQueue, BlockingQueue, TimeUnit }
 
-
-class FIFOStream[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueue[Option[A]]() ) {
+class FIFOStream[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueue[Option[A]]()) {
   lazy val toStream: Stream[A] = queue2stream
   private def queue2stream: Stream[A] = queue take match {
-    case Some(a) => Stream cons ( a, queue2stream )
-    case None    => Stream empty
+    case Some(a) => Stream cons (a, queue2stream)
+    case None => Stream empty
   }
   def close() = queue add None
   def enqueue(a: A) = queue.offer(Some(a), 1, TimeUnit.HOURS)
 }
-
 
 class FIFO[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueue[Option[A]]()) {
 
@@ -24,7 +22,7 @@ class FIFO[A](val queue: BlockingQueue[Option[A]] = new LinkedBlockingQueue[Opti
       nextVal = queue.take
       nextVal match {
         case Some(_) => true
-        case None    => false
+        case None => false
       }
     }
 

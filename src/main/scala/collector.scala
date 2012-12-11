@@ -9,11 +9,9 @@ import scala.actors.Actor._
 
 import afm._
 
-
 trait GenericCollector[A] {
   def collect(dup: A)
 }
-
 
 trait CollectingActor[A] {
   case class Stop()
@@ -63,10 +61,9 @@ trait ParallelCollector[A] extends CollectingActor[A] with ConfigProvider {
   def boost = config.threadPoolBoost
 
   def makeExecutor = new ThreadPoolExecutor(threads, threads, 4, TimeUnit.SECONDS,
-                                                        new LinkedBlockingQueue(0 + 8 * threads),
-                                                        Executors.defaultThreadFactory,
-                                                        new ThreadPoolExecutor.CallerRunsPolicy()
-                                                      )
+    new LinkedBlockingQueue(0 + 8 * threads),
+    Executors.defaultThreadFactory,
+    new ThreadPoolExecutor.CallerRunsPolicy())
 
   def runWithCollector[B](collector: GenericCollector[A])(body: (ExecutorScheduler, Actor) => B): B = {
     val executor = makeExecutor

@@ -11,7 +11,6 @@ import afm.distance._
 import afm.detectors._
 import afm.duplicates._
 
-
 /*! Our model defines a document which is composed by a list of fields, and an identifier
  */
 trait Document {
@@ -43,7 +42,6 @@ case class ListFieldDef(n: String, d: DistanceAlgo, i: Boolean) extends FieldDef
   def apply(s: String) = throw new Exception("Not implemented yet")
 }
 
-
 /*! Each concrete document is built of field values */
 sealed abstract class Field[+A](val value: A) {
   def isEmpty: Boolean = false
@@ -60,9 +58,8 @@ case class ListField(override val value: Seq[Field[String]]) extends Field[Seq[F
   override def isEmpty = value == null || value.isEmpty || value.head.isEmpty
 }
 
-
 /*! A concrete implementation of a document is done by keeping a map of string->fields */
-class MapDocument (val fieldMap: Map[String, Field[Any]])(implicit config: Config) extends Document {
+class MapDocument(val fieldMap: Map[String, Field[Any]])(implicit config: Config) extends Document {
   def fields = fieldMap.toIterable
 
   def apply[A](name: String): Option[Field[A]] = {

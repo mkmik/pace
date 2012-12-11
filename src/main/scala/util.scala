@@ -6,7 +6,6 @@ import org.joda.time.format.PeriodFormatterBuilder
 
 import afm._
 
-
 class ProgressReportingIterator[A](val iterator: Iterator[A], val label: String = "", val totalRecords: Option[Long] = None)(implicit config: Config) extends Iterator[A] {
   var n = 0
   var lastTime = System.currentTimeMillis
@@ -24,7 +23,7 @@ class ProgressReportingIterator[A](val iterator: Iterator[A], val label: String 
       val fb = new PeriodFormatterBuilder().appendDays().appendSuffix("d ").appendHours().appendSuffix("h ").appendMinutes().appendSuffix("m ").appendSeconds().appendSuffix("s").printZeroNever().toFormatter()
 
       val percent = totalRecords match {
-        case Some(t) => "(%s%%, ETA: %s)".format(round(100.0 * n / t), fb.print(new Period(round(1000.0 * (t-n)/arps))))
+        case Some(t) => "(%s%%, ETA: %s)".format(round(100.0 * n / t), fb.print(new Period(round(1000.0 * (t - n) / arps))))
         case None => ""
       }
       println("%s %s (RPS: %s, ARPS: %s) %s".format(label.padTo(40, "-").mkString, n, rps.toString.padTo(8, " ").mkString, round(arps).toString.padTo(8, " ").mkString, percent))

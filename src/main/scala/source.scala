@@ -6,7 +6,6 @@ import scala.collection.JavaConverters._
 
 import afm.model._
 
-
 trait Source {
   def documents(sortKey: String): Iterator[Document]
   def get[A](id: A): Option[Document]

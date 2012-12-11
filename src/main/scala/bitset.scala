@@ -2,7 +2,6 @@ package afm.util
 
 import scala.collection.mutable.BitSet
 
-
 object BitSetUtils {
   def bitsetFromInt(i: Int) = {
     val bits = new BitSet
@@ -38,21 +37,19 @@ object BitSetUtils {
     bits
   }
 
-
   def bitsetToInt(bits: BitSet) = {
     var value = 0
-    for(b <- bits)
+    for (b <- bits)
       value = value | 1 << b
     value
   }
 
   def bitsetToLong(bits: BitSet) = {
     var value = 0L
-    for(b <- bits)
+    for (b <- bits)
       value = value | 1 << b
     value
   }
-
 
   implicit def intToBitSetter(i: Int): IntBitSetter = new IntBitSetter(i)
 
@@ -65,7 +62,6 @@ object BitSetUtils {
   class LongBitSetter(val i: Long) {
     def toBitSet: BitSet = bitsetFromLong(i)
   }
-
 
   implicit def bitsetToBitGetter(bits: BitSet) = new BitGetter(bits)
 

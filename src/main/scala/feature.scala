@@ -12,7 +12,6 @@ import afm.util._
 import afm.duplicates._
 import afm.distance._
 
-
 trait FeatureExtractor[A] extends ConfigProvider {
   def extract(doc: Document): Seq[A]
 }
@@ -31,7 +30,7 @@ class FieldFeatureExtractor[A](val field: FieldDef[A])(implicit val config: Conf
 }
 
 object NGramExtractor {
-  def extractNGrams(value: String, size: Int, max: Int): Seq[String] =  value.sliding(size).take(max).filter(x => !x.contains(" ")).map(_.replace(":","_")).toSeq
+  def extractNGrams(value: String, size: Int, max: Int): Seq[String] = value.sliding(size).take(max).filter(x => !x.contains(" ")).map(_.replace(":", "_")).toSeq
 }
 
 trait NGramValueExtractor extends ValueExtractor[String] {
@@ -47,14 +46,14 @@ trait TokenizedNGramValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
     def tokenize(v: String) = v.split(" ")
     field match {
-      case StringField(value) => (for(token: String <- tokenize(value).toSet;
-				     ngram <- token.sliding(config.ngramSize).take(config.maxNgrams))
-	yield ngram.replace(":","_")).toSeq
+      case StringField(value) => (for (
+        token: String <- tokenize(value).toSet;
+        ngram <- token.sliding(config.ngramSize).take(config.maxNgrams)
+      ) yield ngram.replace(":", "_")).toSeq
       case _ => throw new Exception("unsupported field type")
     }
   }
 }
-
 
 trait RotatedSimhashValueExtractor extends ValueExtractor[String] {
   def extractValue(field: Field[String])(implicit config: Config): Seq[String] = {
@@ -72,7 +71,7 @@ trait SimhashValueExtractor extends ValueExtractor[String] {
     field match {
       case StringField(value) => {
         val hash = Integer.rotateLeft(config.simhashAlgo.simhash(value.toLowerCase), step * config.simhashRotationStep)
-        List(Integer.toHexString(hash).reverse.padTo(Simhash.bits/4, "0").reverse.mkString)
+        List(Integer.toHexString(hash).reverse.padTo(Simhash.bits / 4, "0").reverse.mkString)
       }
       case _ => throw new Exception("unsupported field type")
     }

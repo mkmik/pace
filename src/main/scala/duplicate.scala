@@ -20,19 +20,18 @@ import afm.util._
 import afm.feature._
 import afm.distance._
 
-
 case class Metrics(val precision: Double, val recall: Double, val dups: Int)
 
 case class Duplicate(val d: Double, val a: Document, val b: Document, val exclude: Boolean = false) {
 
-  def formattedIds[A: Ordering](xa: A, xb: A) = { 
+  def formattedIds[A: Ordering](xa: A, xb: A) = {
     val ids = List(xa, xb)
-    "%s-%s".format(ids.max, ids.min) 
+    "%s-%s".format(ids.max, ids.min)
   }
-  
-  def id: String = (a.identifier, b.identifier) match { 
+
+  def id: String = (a.identifier, b.identifier) match {
     case (xa: Int, xb: Int) => formattedIds(xa, xb)
-    case (xa: String, xb: String) => formattedIds(xa, xb) 
+    case (xa: String, xb: String) => formattedIds(xa, xb)
   }
 
   def check = a.realIdentifier == b.realIdentifier
@@ -60,7 +59,7 @@ trait Collector extends GenericCollector[Duplicate] with ConfigProvider {
     if (!(seen contains dupId)) {
       append(dup)
       dups += 1
-      if(dup.check)
+      if (dup.check)
         truePositives += 1
       seen = seen + dupId
     }
@@ -76,7 +75,7 @@ class PrintingCollector(implicit val config: Config) extends Collector {
 trait Duplicates extends ParallelCollector[Duplicate] {
 
   def windowedDetect(allDocs: Iterator[Document], collector: Collector,
-                     windowSize: Int = config.windowSize, totalRecords: Option[Long] = None): Metrics
+    windowSize: Int = config.windowSize, totalRecords: Option[Long] = None): Metrics
 
   def duplicatesInWindow(pivot: Document, window: Iterable[Document], collectorActor: Actor) = {
     val algo = new DistanceScorer(config.fields)
@@ -112,10 +111,10 @@ trait Duplicates extends ParallelCollector[Duplicate] {
     println("WINDOW SIZE %s, INPUT LIMIT %s".format(config.windowSize, config.limit))
     println("THREADS %s".format(threads))
     println("FOUND DUPS %s".format(dups))
-//    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
-//    println("TRUE POSITIVES %s".format(collector.truePositives))
-//    println("PRECISION %s".format(precision))
-//    println("RECALL %s".format(recall))
+    //    println("REAL  DUPS %s (shrinking factor %s)".format(collector.realDups, collector.shrinkingFactor))
+    //    println("TRUE POSITIVES %s".format(collector.truePositives))
+    //    println("PRECISION %s".format(precision))
+    //    println("RECALL %s".format(recall))
 
     Metrics(precision, recall, dups)
   }
@@ -123,7 +122,7 @@ trait Duplicates extends ParallelCollector[Duplicate] {
 
 class SortedNeighborhood(implicit val config: Config) extends Duplicates {
   def windowedDetect(allDocs: Iterator[Document], collector: Collector,
-                     windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {
+    windowSize: Int = config.windowSize, totalRecords: Option[Long] = None) = {
 
     val docs = new ProgressReportingIterator(allDocs, "Dups", totalRecords)
 
@@ -131,8 +130,8 @@ class SortedNeighborhood(implicit val config: Config) extends Duplicates {
 
     val res = runWithCollector(collector) {
       (pool, collectorActor) =>
-        for(pivot <- docs)  {
-          val w = window  // capture the reference to the current queue
+        for (pivot <- docs) {
+          val w = window // capture the reference to the current queue
           pool execute duplicatesInWindow(pivot, w, collectorActor)
 
           window = enqueue(window, pivot, windowSize)
@@ -142,9 +141,8 @@ class SortedNeighborhood(implicit val config: Config) extends Duplicates {
     report(collector)
   }
 
-  def enqueue(q: Queue[Document], v: Document, windowSize: Int) = (if(q.length >= windowSize) q.tail else q).enqueue(v)
+  def enqueue(q: Queue[Document], v: Document, windowSize: Int) = (if (q.length >= windowSize) q.tail else q).enqueue(v)
 }
-
 
 class Blocking(implicit config: Config) extends SortedNeighborhood {
   override def enqueue(q: Queue[Document], v: Document, windowSize: Int) = {
@@ -160,7 +158,7 @@ class Blocking(implicit config: Config) extends SortedNeighborhood {
 
     val matchesPrev = q.isEmpty || blocking.extract(q.head).head == blocking.extract(v).head
 
-    if(matchesPrev)
+    if (matchesPrev)
       q.enqueue(v)
     else
       Queue()

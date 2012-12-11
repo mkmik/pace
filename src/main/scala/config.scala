@@ -18,7 +18,6 @@ object OptionalConfigFactory {
   def load(fileName: String) = new OptionalConfig(ConfigFactory.parseFile(new java.io.File(fileName)))
 }
 
-
 class OptionalConfig(val conf: com.typesafe.config.Config) {
 
   def safe[A](getter: String => A)(implicit path: String) = if (conf.hasPath(path)) Some(getter(path)) else None
@@ -30,12 +29,11 @@ class OptionalConfig(val conf: com.typesafe.config.Config) {
   def getBoolean(implicit path: String) = safe(conf.getBoolean)
 }
 
-
 /////
 
 trait ConfigProvider {
   implicit val config: Config
-} 
+}
 
 /*! Configuration
  */
@@ -48,18 +46,18 @@ trait Config {
   /*! Some of the object we construct here might need this configuration instance */
   implicit val me: Config = this
 
-//  private val mongoDb = MongoConnection()("driver_small")
-//  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
+  //  private val mongoDb = MongoConnection()("driver_small")
+  //  val source = new MongoDBSource(mongoDb("md"), new DNetMongoDBAdapter)
 
-//  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
-//  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
-  val source : Source
+  //  lazy val mongoDb = MongoConnection(mongoHostname)(mongoDbName)
+  //  lazy val source = new MongoDBSource(mongoDb(mongoSourceCollection), mongoAdapter)
+  val source: Source
 
-//  lazy val source = new DBSource()
+  //  lazy val source = new DBSource()
   //def collector: Collector = new GroupingMongoDBCollector(mongoDb(mongoCandidatesCollection))
   def collector: Collector
 
-/*
+  /*
   def mongoAdapter: Adapter[DBObject] = new BSONAdapter
 
   def mongoHostname = "localhost"
@@ -96,7 +94,7 @@ trait Config {
 trait OverrideConfig extends Config {
   val conf = OptionalConfigFactory.load("conf/pace.conf")
 
-/*
+  /*
   override def mongoHostname = conf.getString("pace.mongo.hostName").getOrElse(super.mongoHostname)
   override def mongoDbName = conf.getString("pace.mongo.dbName").getOrElse(super.mongoDbName)
   override def mongoSourceCollection = conf.getString("pace.mongo.sourceCollection").get // OrElse(super.mongoSourceCollection)
@@ -128,15 +126,16 @@ trait OverrideConfig extends Config {
     case None => super.simhashAlgo
   }
 
-/**  override def scanner = conf.getString("pace.algo") match {
-
-    case Some("singleField") => new SingleFieldScanner
-    case Some("mergedSimhash") => new MergedSimhashScanner
-    case Some("simhash") => new MultiPassSimhashScanner
-    case Some("ngram") => new NgramScanner
-    case None => super.scanner
-  }
-*/
+  /**
+   * override def scanner = conf.getString("pace.algo") match {
+   *
+   * case Some("singleField") => new SingleFieldScanner
+   * case Some("mergedSimhash") => new MergedSimhashScanner
+   * case Some("simhash") => new MultiPassSimhashScanner
+   * case Some("ngram") => new NgramScanner
+   * case None => super.scanner
+   * }
+   */
 
   override def duplicateDetector = conf.getString("pace.detector") match {
     case Some("sortedNeighborhood") => new SortedNeighborhood
