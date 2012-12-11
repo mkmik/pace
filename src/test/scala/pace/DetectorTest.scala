@@ -36,15 +36,14 @@ object DetectorSpec extends Specification {
 
   "pace" should {
     "rule" in {
+      implicit val config: OverrideConfig = new Object with ConfigurableModel
 
       val resA = Builder.ResultBuilder(_.setId("A").setMetadata(Builder.ResultMetadata(_.addTitle("Test").addTitle("Boh")))).build;
       val resB = Builder.ResultBuilder(_.setId("B").setMetadata(Builder.ResultMetadata(_.addTitle("Tost")))).build;
 
-      println("resA", resA)
-      println("resB", resB)
-
       val distance = new ProtoDistance()
-      println(distance.toDocument(resA))
+      val d = distance.between(resA, resB)
+      println("Result --------------------> %s".format(d))
     }
   }
 }
