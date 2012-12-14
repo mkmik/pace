@@ -29,6 +29,7 @@ object ApplicationBuild extends Build {
 
     "org.scalaj" %% "scalaj-time" % "0.6",
 
+    "junit" % "junit" % "4.8.1" % "test",
     "org.specs2" %% "specs2" % "1.12.3" % "test",
     "eu.dnetlib" % "dnet-openaire-data-protos" % "1.0-SNAPSHOT" % "test",
 

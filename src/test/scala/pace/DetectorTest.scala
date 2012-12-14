@@ -1,3 +1,5 @@
+package pace
+
 import org.specs2.mutable._
 import resource._
 import java.io._
@@ -15,7 +17,8 @@ import eu.dnetlib.data.proto.TypeProtos
 import eu.dnetlib.data.proto.InferenceProtos.Inference
 import eu.dnetlib.data.proto.StructuredPropertyProtos.StructuredProperty
 import eu.dnetlib.data.proto.QualifierProtos.Qualifier
-import pace.ProtoDistance
+import org.junit.runner.RunWith
+import org.specs2.runner.JUnitRunner
 
 object Builder {
   type B = Oaf.Builder
@@ -31,7 +34,8 @@ object Builder {
   implicit def struct(value: String): StructuredProperty.Builder = StructuredProperty.newBuilder().setValue(value);
 }
 
-object DetectorSpec extends Specification {
+@RunWith(classOf[JUnitRunner])
+class DetectorSpec extends Specification {
   import Builder.struct
 
   "pace" should {
