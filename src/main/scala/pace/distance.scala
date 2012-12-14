@@ -24,9 +24,12 @@ class ProtoDistance(implicit config: Config) extends Distance[GeneratedMessage] 
     println("Scanning fields")
     traverse(a) { (path, value) =>
       println("At: %s, Value: %s".format(path, value))
+
       res = res + (path -> (value match {
         case s: String => StringField(s)
-        case l: List[_] => ListField(for (s <- l) yield StringField(s.asInstanceOf[String]))
+        case l: List[_] => ListField(for (x <- l) yield x match {
+          case (_, s: String) => StringField(s)
+        })
       }))
     }
 
@@ -41,6 +44,15 @@ class ProtoDistance(implicit config: Config) extends Distance[GeneratedMessage] 
 
       def stringValue(value: Object) = value match {
         case e: com.google.protobuf.Descriptors.EnumValueDescriptor => e.getName()
+        case l: List[_] => {
+          var values = List[(String, String)]()
+          for (v <- l) {
+            traverse(v.asInstanceOf[GeneratedMessage], List(), level + 1) { (path, value) =>
+              values = (path, value.asInstanceOf[String]) +: values
+            }
+          }
+          values
+        }
         case x => x.toString()
       }
 
